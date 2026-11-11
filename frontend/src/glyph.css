@@ -292,3 +292,9 @@ div:has(>.swrow .setrow:not(.done)) ~ div .swrow .setrow:not(.done) .n{
 .slevel-bar{grid-template-columns:repeat(5,10px);gap:6px;justify-content:start}
 .slevel-bar span{width:10px;height:10px;border-radius:50%}
 [dir="rtl"] .mrow .bar{transform:scaleX(-1)}   /* fills from the inline start; the dots are symmetric */
+
+/* The wordmark (components/Wordmark.jsx): open / Gym / -N. */
+.wordmark{white-space:nowrap}
+.wm-open{color:var(--label)}
+.wm-gym{color:var(--live)}
+.wm-n{color:var(--label-2)}
