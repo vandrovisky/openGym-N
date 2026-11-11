@@ -13,7 +13,7 @@ import { tappable } from '../lib/use-sheet-keyboard.js'
 import { litRows } from '../lib/dot-matrix.js'
 
 // The glyph skin draws every bar as dots (lib/dot-matrix.js): lit ones in --label, unlit in
-// --surface-2 (index.css/glyph.css .sbar-dots). A viewBox of 10 units a dot keeps them round at any width.
+// --surface-2 (glyph.css .sbar-dots). A viewBox of 10 units a dot keeps them round at any width.
 const DOTS = 12, STACK_DOTS = 24
 const unit = f => Math.max(0, Math.min(1, Number(f) || 0))
 

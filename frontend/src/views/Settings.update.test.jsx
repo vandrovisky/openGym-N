@@ -11,7 +11,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 // flips the two gates (MOBILE flag, Capacitor platform) and watches whether Settings even
 // asks gitlab.com for the latest release.
 const mocks = vi.hoisted(() => {
-  const state = { S: null, MOBILE: false, android: false, channel: 'sideload' }
+  const state = { S: null, MOBILE: false, android: false, channel: 'sideload', glyph: false }
   state.snapshot = () => ({
     S: state.S,
     user: null,
@@ -56,6 +56,9 @@ vi.mock('../lib/update.js', () => ({
   downloadAndInstall: vi.fn(),
   forgetDownloadedUpdate: (...a) => mocks.forget(...a),
 }))
+// The glyph skin never updates itself (it is not the upstream package); the cases below are about the
+// updater, so the skin is off, and the last case turns it on.
+vi.mock('../lib/skin.js', async orig => ({ ...(await orig()), get GLYPH() { return mocks.glyph } }))
 vi.mock('../lib/channel.js', () => ({ getChannel: () => Promise.resolve(mocks.channel), gymReminderBuilt: () => Promise.resolve(true) }))
 vi.mock('./MobileOnboarding.jsx', () => ({ ConnectSheet: () => null }))
 vi.mock('../sheets.jsx', () => ({
@@ -74,6 +77,7 @@ beforeEach(() => {
   mocks.MOBILE = false
   mocks.android = false
   mocks.channel = 'sideload'
+  mocks.glyph = false
   mocks.checkForUpdate.mockClear()
   mocks.confirmSheet.mockClear()
   mocks.forget.mockClear()
@@ -222,5 +226,16 @@ describe('Settings: support links', () => {
     await mount()
     expect(row('Buy me a coffee')).toBeTruthy()
     expect(row('Rate openGym on Google Play')).toBeUndefined()
+  })
+
+  it('glyph skin on a sideloaded Android build: never checks, no update row, no check row', async () => {
+    mocks.glyph = true
+    mocks.MOBILE = true
+    mocks.android = true
+    mocks.channel = 'sideload'
+    await mount()
+    expect(mocks.checkForUpdate).not.toHaveBeenCalled()
+    expect(updateRow()).toBeUndefined()
+    expect(checkRow()).toBeUndefined()
   })
 })

@@ -146,7 +146,7 @@ body{
 .effcell,.effcell-stp .val,.effpick .effpick-n,.efftbl .n,.stp .num,.stp .val,.plateline .moves,
 .mrow .v.sess,.mrow .v.cmp,.streak-badge .n,.pbar-n,.ch-sub,.datep-grid .cal-d,.datep-m,.wchip,
 .ci-card .ci-value,.ci-reorder .ci-pos,.dw-it,.gym-size small,.sbar-v,.slegend-v,.mus-miss-n,
-.slevel-meta,.ex-day-s,.kpis .tile .v,.setrow .n{
+.slevel-meta,.ex-day-s,.setrow .n{
   font-family:var(--font-mono);
 }
 .setrow .stp .num{font-size:15px;letter-spacing:-.04em}
@@ -248,7 +248,8 @@ div:has(>.swrow .setrow:not(.done)) ~ div .swrow .setrow:not(.done) .n{
 }
 
 /* A running rest: the clock and its bar in red; paused or ready, they go quiet. */
-#timer.rest:not(.paused):not(.ready) .t{color:var(--live)}
+/* The digits stay --label (the red is 3.4:1 on the raised timer); the dot bar carries the red. */
+#timer.rest:not(.paused):not(.ready) .t{color:var(--label)}
 #timer.rest:not(.paused):not(.ready) .bar i.on{background:var(--live)}
 
 /* A record. White on the red so it clears 4.5:1 in both themes. */
@@ -298,3 +299,26 @@ div:has(>.swrow .setrow:not(.done)) ~ div .swrow .setrow:not(.done) .n{
 .wm-open{color:var(--label)}
 .wm-gym{color:var(--live)}
 .wm-n{color:var(--label-2)}
+
+/* The body maps and their legends keep a scale in grey: index.css paints the levels with the system
+   colours, which are all one grey here. Fatigue climbs grey to white and ends in the live red;
+   strength tops out in --label (not a darker step than the one below). */
+.hm-fatigue .bm-m.l1{fill:var(--label-3)}
+.hm-fatigue .bm-m.l2{fill:var(--label-2)}
+.hm-fatigue .bm-m.l3{fill:var(--label)}
+.hm-fatigue .bm-m.l4{fill:var(--live)}
+.hm-fatigue .hm-c.l1{background:var(--label-3)}
+.hm-fatigue .hm-c.l2{background:var(--label-2)}
+.hm-fatigue .hm-c.l3{background:var(--label)}
+.hm-fatigue .hm-c.l4{background:var(--live)}
+.hm-strength .bm-m.l4{fill:var(--label);filter:none}
+.hm-strength .hm-c.l4{background:var(--label)}
+.fbar .zone.recovering{background:var(--label-2)}
+.fbar .zone.fatigued{background:var(--live)}
+
+/* The year recap's big number: Doto, at the size of its box (Wrapped.css sizes .wr-big). */
+.wr-num{
+  font-family:var(--font-dot);font-size:clamp(72px,26vw,156px);letter-spacing:0;
+  font-variation-settings:"ROND" 100,"wght" 900;font-weight:900;
+}
+.wr-intro .wr-num{font-size:clamp(96px,34vw,200px)}

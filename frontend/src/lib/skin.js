@@ -14,3 +14,7 @@ export const LIVE = '#d71921'
 
 /** The app's accent in the skin is the theme's text colour; the red is the --live token. */
 export const skinAccent = theme => PALETTE[theme === 'light' ? 'light' : 'dark'][6]
+
+// Series 1 to 5 on a chart (the per-set progress lines): a ramp from quiet grey to the text colour,
+// so five lines stay apart where the system colours are all one grey. Theme-aware through the tokens.
+export const SET_RAMP = ['var(--label-3)', 'var(--label-2)', 'color-mix(in srgb, var(--label) 65%, var(--label-2))', 'color-mix(in srgb, var(--label) 85%, var(--label-2))', 'var(--label)']

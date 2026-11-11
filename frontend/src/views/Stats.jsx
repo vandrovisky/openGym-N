@@ -45,9 +45,10 @@ import { tappable } from '../lib/use-sheet-keyboard.js'
 import { isWarmupRow } from '../lib/workout-model.js'
 import { exView, exUnitOf, shownWeight } from '../lib/ex-unit.js'
 import { isOn } from '../lib/modules.js'
+import { SET_RAMP } from '../lib/skin.js'
 
-// Set 1 to 5 on the per-set chart — system colours, so each line keeps its hue in dark mode.
-const SET_COLORS = ['var(--blue)', 'var(--green)', 'var(--orange)', 'var(--purple)', 'var(--pink)']
+// Set 1 to 5 on the per-set chart: a grey ramp in the glyph skin (lib/skin.js), where the system colours are all one grey.
+const SET_COLORS = SET_RAMP
 
 // The date range buttons under Body weight, and since issue #511 under Exercise progress too.
 // In days, 0 = everything; a function because the labels follow the current language.

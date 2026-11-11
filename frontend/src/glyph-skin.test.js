@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { PALETTE } from './lib/skin.js'
+import { PALETTE, SET_RAMP } from './lib/skin.js'
 import { contrast } from './lib/accent.js'
 import { readdirSync, statSync } from 'node:fs'
 
@@ -183,7 +183,7 @@ describe('glyph.css', () => {
       expect(bar).toContain('color:var(--label-2)')
       expect(css).toMatch(/#tabbar button\.on[^{]*::before/)
     })
-    it('a ticked set is a filled --label circle, an open one an outline in --label-3', () => {
+    it('a ticked set is a filled --label circle, an open one an outline in --label-2', () => {
       const done = block('.setrow.done .n,.setrow-side.done>.n').replace(/\s+/g, '')
       expect(done).toContain('background:var(--label)')
       const open = block('.setrow:not(.done) .n,.setrow-side:not(.done)>.n').replace(/\s+/g, '')
@@ -191,7 +191,7 @@ describe('glyph.css', () => {
     })
     it('red marks the current set, the running rest, the PR badge, errors and destructive actions', () => {
       const red = sel => expect(css, sel).toMatch(new RegExp(sel.replace(/[.#()*+?[\]|]/g, '\\$&') + '[^{]*\\{[^}]*var\\(--live\\)'))
-      red('#timer.rest:not(.paused):not(.ready) .t')
+      red('#timer.rest:not(.paused):not(.ready) .bar i.on')
       red('.pr')
       red('.btn.danger')
       red('.swrow .setrow:not(.done) .n')
@@ -203,6 +203,46 @@ describe('glyph.css', () => {
       expect(root).toContain('--red-ink:var(--live)')
       const media = css.match(/@media \(prefers-contrast: more\)\s*\{([\s\S]*)\}\s*$/)?.[1] || ''
       expect(block(':root', media)).toContain('--label-dim:var(--label-2)')
+    })
+  })
+
+  describe('final review fixes', () => {
+    const flat = css.replace(/\s+/g, '')
+    it('the fatigue map climbs --label-3, --label-2, --label and ends in the live red, on the body and the legend', () => {
+      const want = ['--label-3', '--label-2', '--label', '--live']
+      want.forEach((v, i) => {
+        expect(flat).toContain(`.hm-fatigue.bm-m.l${i + 1}{fill:var(${v})}`)
+        expect(flat).toContain(`.hm-fatigue.hm-c.l${i + 1}{background:var(${v})}`)
+      })
+    })
+    it('the strongest strength band is --label, never darker than the one below', () => {
+      expect(flat).toContain('.hm-strength.bm-m.l4{fill:var(--label)')
+      expect(flat).toContain('.hm-strength.hm-c.l4{background:var(--label)}')
+    })
+    it('the fatigue bar zones do not lean on the greyed system colours', () => {
+      expect(flat).toContain('.fbar.zone.recovering{background:var(--label-2)}')
+      expect(flat).toContain('.fbar.zone.fatigued{background:var(--live)}')
+    })
+    it('the per-set chart ramp has five distinct entries and none is a system colour', () => {
+      expect(SET_RAMP).toHaveLength(5)
+      expect(new Set(SET_RAMP).size).toBe(5)
+      for (const c of SET_RAMP) for (const k of SYSTEM) expect(c).not.toContain(k)
+    })
+    it('the totals tiles are Doto (not in the Mono list) and the recap number is Doto', () => {
+      const mono = css.match(/\.tab-time,[^{]*\{[^}]*font-family:var\(--font-mono\)/)?.[0] || ''
+      expect(mono).not.toBe('')
+      expect(mono).not.toContain('.kpis .tile .v')
+      expect(block('.tile .v:not(.v-sm)')).toContain('font-family:var(--font-dot)')
+      expect(block('.wr-num')).toContain('font-family:var(--font-dot)')
+    })
+    it('the running rest digits are --label; the dot bar carries the red', () => {
+      expect(block('#timer.rest:not(.paused):not(.ready) .t').replace(/\s+/g, '')).toContain('color:var(--label)')
+      expect(block('#timer.rest:not(.paused):not(.ready) .bar i.on').replace(/\s+/g, '')).toContain('background:var(--live)')
+    })
+    it('the boot overlay in index.html has no lime', () => {
+      const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8')
+      expect(html).not.toMatch(/a3e635|0c0e12/i)
+      expect(html).toMatch(/class="db" fill="#f2f2f2"/)
     })
   })
 })

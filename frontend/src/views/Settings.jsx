@@ -226,12 +226,13 @@ export default function Settings({ page = null, find = null, via = null, entryKe
       setIos(!ok)
       const channel = ok ? await getChannel() : null
       const own = channel === 'sideload'
-      setSelfUpdate(own)
+      // The glyph skin is its own package: the release feed is the upstream app's, so it never updates itself.
+      setSelfUpdate(own && !GLYPH)
       setPlay(channel === 'play')
       setFdroid(channel === 'fdroid')
       if (ok) gymReminderBuilt().then(setGymReminder)
       // Nothing newer: an update APK still in the cache is the one already installed.
-      if (own && page === 'about') checkForUpdate().then(info => { setUpdateInfo(info); if (!info?.hasUpdate) forgetDownloadedUpdate() }).catch(() => {})
+      if (own && !GLYPH && page === 'about') checkForUpdate().then(info => { setUpdateInfo(info); if (!info?.hasUpdate) forgetDownloadedUpdate() }).catch(() => {})
     })
   }, [page])
 
