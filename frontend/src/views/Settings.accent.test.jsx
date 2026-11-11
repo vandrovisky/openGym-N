@@ -24,6 +24,8 @@ const mocks = vi.hoisted(() => {
   })
   return state
 })
+// The glyph skin hides the accent row (lib/skin.js); these cases are about the row itself.
+vi.mock('../lib/skin.js', async orig => ({ ...(await orig()), GLYPH: false }))
 vi.mock('../store/useStore.js', () => {
   const useStore = selector => selector ? selector(mocks.snapshot()) : mocks.snapshot()
   useStore.getState = mocks.snapshot

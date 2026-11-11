@@ -17,6 +17,7 @@
    override, which is only ever opt-in. `appIcon` names its icon in lib/app-icon-variants.js, which
    the settings page then suggests while the theme shows. */
 import { isOn } from './modules.js'
+import { GLYPH } from './skin.js'
 
 export const THEMES = [
   {
@@ -54,6 +55,7 @@ export function inSeason(theme, now = new Date()) {
 
 /** 'auto', 'on' or 'off'; anything else (absent, a value from a newer client) reads as Auto. */
 export function seasonChoice(S, id) {
+  if (GLYPH) return 'off'   // the glyph skin has no seasonal looks (lib/skin.js)
   const v = S?.seasonal?.[id]
   return CHOICES.includes(v) ? v : 'auto'
 }

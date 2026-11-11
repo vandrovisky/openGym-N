@@ -3,6 +3,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { THEMES, inSeason, seasonChoice, themeOn, activeSeason, seasonAccent, seasonInWorkout, onceToday, doneToday } from './seasonal.js'
 
+// The glyph skin turns the seasonal looks off; these cases are about the feature itself, so the
+// skin is off here, and one case at the end turns it on.
+const skin = vi.hoisted(() => ({ glyph: false }))
+vi.mock('./skin.js', () => ({ get GLYPH() { return skin.glyph } }))
+
 const local = (y, m, d, h = 12, min = 0) => new Date(y, m - 1, d, h, min)
 
 describe('the Halloween window', () => {
@@ -163,5 +168,16 @@ describe('the Christmas window', () => {
       expect(APP_ICON_IDS, th.id).toContain(th.appIcon)
       expect(th.appIconTitle, th.id).toBeTruthy()
     }
+  })
+})
+
+describe('the glyph skin', () => {
+  afterEach(() => { skin.glyph = false })
+  it('shows no seasonal theme, even one set to On', () => {
+    const S = { seasonal: { halloween: 'on' } }
+    expect(activeSeason(S, local(2026, 10, 31))).toBe('halloween')
+    skin.glyph = true
+    expect(seasonChoice(S, 'halloween')).toBe('off')
+    expect(activeSeason(S, local(2026, 10, 31))).toBeNull()
   })
 })

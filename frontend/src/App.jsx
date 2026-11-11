@@ -7,6 +7,7 @@ import { bindUI } from './components/ui.jsx'
 import { setWeightDecimals } from './lib/format.js'
 import { accentValue, applyAccent } from './lib/accent.js'
 import { seasonAccent } from './lib/seasonal.js'
+import { GLYPH, PALETTE, skinAccent } from './lib/skin.js'
 import { setLang, useLang, baseLang } from './lib/i18n.js'
 import { effectiveLang } from './lib/default-lang.js'
 import { setPlayOnSilent, setVibrate, setAlarmBuzzer, setNativeBuzzer } from './lib/sound.js'
@@ -118,7 +119,7 @@ function applyPrefs(theme, accent) {
   de.dataset.theme = resolveTheme(theme)
   applyAccent(de, accent, de.dataset.theme)
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.content = de.dataset.theme === 'light' ? '#f2f2f7' : '#000000'
+  if (meta) meta.content = PALETTE[de.dataset.theme === 'light' ? 'light' : 'dark'][0]
   if (MOBILE) setSystemBarsLight(de.dataset.theme === 'light')
 }
 
@@ -161,7 +162,7 @@ function Shell() {
   // A preset key, or the user's own colour as '#rrggbb' (lib/accent.js), already checked. A
   // seasonal theme's colours stand in for it while that theme shows, and only when chosen
   // (Settings → Look & Home → Seasonal themes); the saved accent itself is never touched.
-  const accent = seasonAccent(S) || accentValue(S)
+  const accent = GLYPH ? skinAccent(resolveTheme(S.theme)) : (seasonAccent(S) || accentValue(S))
   useEffect(() => { applyPrefs(S.theme, accent) }, [S.theme, accent])
   // 'system' needs to react live if the OS theme flips while the app is open, not just on
   // the next mount — a fixed 'dark'/'light' choice never re-fires this since matchMedia

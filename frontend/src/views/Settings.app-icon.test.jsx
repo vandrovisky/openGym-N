@@ -24,6 +24,8 @@ const mocks = vi.hoisted(() => {
   })
   return state
 })
+// The glyph skin has no accent row and no seasonal themes (lib/skin.js); these cases are about them.
+vi.mock('../lib/skin.js', async orig => ({ ...(await orig()), GLYPH: false }))
 vi.mock('../store/useStore.js', () => {
   const useStore = selector => selector ? selector(mocks.snapshot()) : mocks.snapshot()
   useStore.getState = mocks.snapshot

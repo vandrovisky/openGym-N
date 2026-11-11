@@ -75,6 +75,7 @@ import { csvExportSheet } from '../components/CsvExportSheet.jsx'
 import GymReminderPage, { GymEditPage, GymFindPage } from './GymReminder.jsx'
 import { readGymConfig } from '../lib/gym-reminder.js'
 import { THEMES, inSeason, seasonChoice, activeSeason } from '../lib/seasonal.js'
+import { GLYPH } from '../lib/skin.js'
 import { adventOf, adventOpenable } from '../lib/advent.js'
 import { openSeasonal } from '../components/Seasonal.jsx'
 import { useNfcSupported, nfcStickerSheet } from '../components/Nfc.jsx'
@@ -488,7 +489,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
     plan: () => (mode === 'rotation' ? t('Rotation') : t('Fixed Week')) + ' · ' + shortWeekday(weekStartOf(S) === SUNDAY ? 0 : 1),
     units: () => (S.unit || 'kg') + ' · ' + (LANGS[lang] || lang),
     equipment: () => (S.equipFilterOn && activeProfile ? activeProfile.name : ownsNoDumbbells(S) ? t('Everything but dumbbells') : t('Everything')),
-    look: () => themeLabel + ' · ' + accentLabel(S),
+    look: () => GLYPH ? themeLabel : themeLabel + ' · ' + accentLabel(S),
     modules: () => { const p = presetOf(S); return p === 'custom' ? t('Custom') : presetCopy()[p][0] },
     coach: () => (coachLocal?.mode === 'server' ? t('Your server') : coachLocal?.mode === 'byok' ? t('Your API key') : t('Off')),
     data: () => '',
@@ -953,12 +954,13 @@ export default function Settings({ page = null, find = null, via = null, entryKe
             onChange={v => update(s => { s.theme = v })}
           />
         </Row>
-        <div className="lrow" style={{ flexWrap: 'wrap', rowGap: 12, paddingBottom: 14 }}>
+        {/* The glyph skin has one fixed accent (lib/skin.js): no colour to pick. */}
+        {!GLYPH && <div className="lrow" style={{ flexWrap: 'wrap', rowGap: 12, paddingBottom: 14 }}>
           <span className="lrow-i" style={{ '--tint': 'var(--purple)' }}><Icon name="palette" /></span>
           <span className="lrow-m"><span className="lrow-t">{t('Accent color')}</span></span>
           <span className="lrow-v">{accentLabel(S)}</span>
           <AccentSwatches S={S} update={update} />
-        </div>
+        </div>}
         {/* The home-screen icon: the phone's own, not synced; in the phone app only. */}
         {MOBILE && platformNow() && <AppIconRow />}
         {/* How the muscle map is drawn. The exercise drawings follow it until they are set below. */}
@@ -984,7 +986,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
         </Row>
       </Section>
       {/* Halloween and whatever comes after it (lib/seasonal.js), on a page of their own. */}
-      {on('seasonal') && <Section>
+      {!GLYPH && on('seasonal') && <Section>
         <Row icon="pumpkin" iconTint="var(--orange)" title={t('Seasonal themes')} subtitle={t('Little extras for the time of year.')}
           value={activeSeasonTitle(S)} accessory="chevron" onClick={() => open('themes')} />
       </Section>}

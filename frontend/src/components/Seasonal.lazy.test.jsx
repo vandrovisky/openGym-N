@@ -10,6 +10,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 const st = vi.hoisted(() => ({ S: {}, loaded: 0, xmas: 0, tour: false }))
+// The glyph skin turns the seasonal looks off (lib/skin.js); these cases are about the layer itself.
+vi.mock('../lib/skin.js', async orig => ({ ...(await orig()), GLYPH: false }))
 vi.mock('../store/useStore.js', () => ({ useStore: sel => sel({ S: st.S }) }))
 vi.mock('../lib/tour.js', () => ({ useTourRunning: () => st.tour }))
 vi.mock('../seasonal/halloween.jsx', () => {

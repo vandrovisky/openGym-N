@@ -8,6 +8,7 @@
 import { t } from '../lib/i18n.js'
 import { ACCENT_NAMES } from '../lib/format.js'
 import { MODULES } from '../lib/modules.js'
+import { GLYPH } from '../lib/skin.js'
 
 // `mod`: the module (lib/modules.js) a page belongs to; with it off the page and its rows are gone,
 // from the root and from the search alike (pageVisible, searchSettings).
@@ -268,6 +269,10 @@ export function pageTrail(page, tr = t) {
  * that starts with the query ranks first, then a title containing it, then the rest. Pages
  * themselves are hits too ("units" finds Units & language).
  */
+// The glyph skin has no accent colour and no seasonal themes (lib/skin.js): Settings draws neither
+// row, so the search does not offer them.
+const noSkin = (page, title) => GLYPH && (page === 'themes' || (page === 'look' && (title === 'Accent color' || title === 'Seasonal themes')))
+
 export function searchSettings(query, ctx, tr = t) {
   const words = fold(query).trim().split(/\s+/).filter(Boolean)
   if (!words.length) return []
@@ -290,13 +295,14 @@ export function searchSettings(query, ctx, tr = t) {
   for (const id of PAGE_IDS) {
     // The page itself too: Gym reminder hangs under Reminders, which the web has, but is the phone's.
     const top = PAGES[id].parent ? PAGES[id].parent : id
-    if (!pageVisible(top, ctx) || !pageVisible(id, ctx) || id === 'advanced') continue
+    if (!pageVisible(top, ctx) || !pageVisible(id, ctx) || id === 'advanced' || noSkin(id)) continue
     consider({ page: id, title: PAGES[id].title, icon: PAGES[id].icon, tint: PAGES[id].tint, kw: PAGES[id].kw }, true)
   }
   for (const e of SEARCH) {
     if (!pageVisible(PAGES[e.page].parent || e.page, ctx)) continue
     // A page under another that its own module hides (Look & Home → Seasonal themes).
     if (PAGES[e.page].mod && !pageVisible(e.page, ctx)) continue
+    if (noSkin(e.page, e.title)) continue
     if (e.when && !e.when(ctx)) continue
     if (e.mod && ctx.mod && !ctx.mod(e.mod)) continue
     consider(e, false)

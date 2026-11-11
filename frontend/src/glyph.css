@@ -1,0 +1,65 @@
+/* ==========================================================================
+   The glyph skin (docs/superpowers/specs/2026-11-11-glyph-skin-design.md): black, a grey ramp,
+   one red. It loads after index.css and redefines that file's tokens, so the whole app follows
+   without touching a view. The colours are lib/skin.js PALETTE (glyph-skin.test.js keeps the two
+   in step): bg, s1, s2, s3, mute, grey, fg.
+   ========================================================================== */
+:root {
+  --live: #d71921;   /* live things only: a running timer, a record. Never the accent. */
+
+  /* Task 2 loads the real faces; until then the system fonts stand in. */
+  --font-dot:  ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-ui:   -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --bg:        #000000;
+  --bg-el:     #0e0e0e;
+  --surface:   #0e0e0e;
+  --surface-2: #1a1a1a;
+  --surface-3: #2a2a2a;
+  --surface-raised: #1a1a1a;
+
+  --label:     #f2f2f2;
+  --label-2:   #8c8c8c;
+  --label-3:   #4a4a4a;
+  --label-4:   #2a2a2a;
+  --label-dim: var(--label-2);
+
+  --sep:       #2a2a2a;
+  --sep-op:    #2a2a2a;
+
+  /* The system colours are decoration in the skin: all grey. Red is the one live colour. */
+  --blue:var(--label-2); --green:var(--label-2); --orange:var(--label-2); --yellow:var(--label-2);
+  --teal:var(--label-2); --indigo:var(--label-2); --pink:var(--label-2); --purple:var(--label-2);
+  --mint:var(--label-2); --brown:var(--label-2);
+  --red:var(--live);
+
+  /* The accent is the text colour (App.jsx applies it inline; this is the value before that). */
+  --acc:#f2f2f2;
+  --acc-2:#c2c2c2;
+  --on-acc:#000000;
+  --acc-ink:#f2f2f2;
+}
+
+:root[data-theme="light"] {
+  --bg:        #e9e9e9;
+  --bg-el:     #ffffff;
+  --surface:   #ffffff;
+  --surface-2: #f1f1f1;
+  --surface-3: #d9d9d9;
+  --surface-raised: #f1f1f1;
+
+  --label:     #0b0b0b;
+  --label-2:   #696969;
+  --label-3:   #b8b8b8;
+  --label-4:   #d9d9d9;
+  --label-dim: var(--label-2);
+
+  --sep:       #d9d9d9;
+  --sep-op:    #d9d9d9;
+
+  --acc:#0b0b0b;
+  --acc-2:#3a3a3a;
+  --on-acc:#ffffff;
+  --acc-ink:#0b0b0b;
+}

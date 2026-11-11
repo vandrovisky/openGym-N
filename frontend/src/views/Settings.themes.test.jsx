@@ -39,6 +39,10 @@ vi.mock('react-router-dom', () => ({ useNavigate: () => () => {} }))
 vi.mock('../lib/api.js', () => ({
   api: vi.fn(), webauthnOK: () => false, passkeyLogin: vi.fn(), passkeyRegister: vi.fn(), IS_ANDROID: false,
 }))
+// The glyph skin hides the seasonal row and the accent row; the cases below are about the feature
+// itself, so the skin is off, and the last case turns it on.
+const skin = vi.hoisted(() => ({ glyph: false }))
+vi.mock('../lib/skin.js', async orig => ({ ...(await orig()), get GLYPH() { return skin.glyph } }))
 vi.mock('../lib/push.js', () => ({ pushSupported: () => false, enablePush: vi.fn(), disablePush: vi.fn(), sendTestPush: vi.fn() }))
 vi.mock('../lib/wakelock.js', () => ({ wakeLockSupported: () => false }))
 vi.mock('../lib/mobile.js', () => ({ get MOBILE() { return mocks.MOBILE }, isAndroid: () => Promise.resolve(false), shareExport: vi.fn(), syncReminder: vi.fn() }))
@@ -80,6 +84,21 @@ const press = label => act(() => { [...rowOf('Halloween').querySelectorAll('.seg
 const footer = () => host.querySelector('.sect-f')?.textContent
 const at = (y, m, d) => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date(y, m - 1, d, 12)) }
 afterEach(() => vi.useRealTimers())
+
+describe('the glyph skin', () => {
+  afterEach(() => { skin.glyph = false })
+  it('has no Seasonal themes row and no Accent color row on Look & Home', () => {
+    at(2026, 10, 25)
+    mount('look')
+    expect(rowOf('Seasonal themes')).toBeDefined()
+    expect(rowOf('Accent color')).toBeDefined()
+    act(() => root.unmount()); root = createRoot(host)
+    skin.glyph = true
+    mount('look')
+    expect(rowOf('Seasonal themes')).toBeUndefined()
+    expect(rowOf('Accent color')).toBeUndefined()
+  })
+})
 
 describe('Seasonal themes', () => {
   it('Look & Home opens the page, and names the theme that shows right now', () => {
