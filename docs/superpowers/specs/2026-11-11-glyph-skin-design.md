@@ -1,6 +1,6 @@
 # openGym-N: skin glyph para o APK pessoal
 
-Data: 2026-11-11. Estado: aguardando aprovação.
+Data: 2026-11-11. Estado: implementado no branch `glyph-skin`, APK ainda não gerado (falta JDK e Android SDK nesta máquina).
 
 ## Intenção
 
@@ -54,7 +54,7 @@ openGym original.
 | cartões, desligado | `#1A1A1A` | `#F1F1F1` |
 | linhas, pontos apagados | `#2A2A2A` | `#D9D9D9` |
 | inativo | `#4A4A4A` | `#B8B8B8` |
-| rótulos, secundário | `#8C8C8C` | `#6E6E6E` |
+| rótulos, secundário | `#8C8C8C` | `#696969` |
 | texto, ligado | `#F2F2F2` | `#0B0B0B` |
 | vermelho | `#D71921` | `#D71921` |
 
@@ -156,3 +156,21 @@ Escolhas minhas, salvo indicação:
 - Desenho final do halter em pontos.
 - Formato das fontes embutidas (woff2 se houver ferramenta, senão ttf) e subconjunto de glifos.
 - Como montar o ambiente de build Android nesta máquina (WSL ou Windows).
+
+## Desvios e decisões tomadas na implementação
+
+- Cinza de rótulo no tema claro: `#696969` em vez de `#6E6E6E`, para ter 4,5:1 sobre o fundo `#E9E9E9`.
+- O app não tem anéis. O timer de descanso virou 30 pontos em círculo e a sequência (streak) 20 pontos em
+  linha. `WeeklySets` e as barras de progresso de Desafios não mudaram.
+- A série em curso e o relógio do treino ficam em Space Mono: as caixas reais têm 39 a 48px e 13px de
+  fonte, pequenas demais para Doto. O bloco grande "80 × 8" do mockup B não foi construído (precisa de
+  mudança de layout, decisão do usuário).
+- Dígitos do descanso correndo ficam na cor de texto; a barra de pontos leva o vermelho (o vermelho
+  sobre o cartão elevado dá 3,4:1). O valor do vermelho `#D71921` não mudou, então texto pequeno de
+  erro em vermelho fica em torno de 4,05:1 sobre preto, abaixo de 4,5:1.
+- O app nunca verifica atualização nem mostra a linha de atualização: o feed de releases é o do
+  openGym original e ofereceria o pacote oficial. O APK é atualizado à mão.
+- Mapas do corpo e legendas usam escala de cinza a branco, com o vermelho no extremo da fadiga; o gráfico
+  por série usa uma rampa de cinzas (`SET_RAMP`).
+- O app Wear OS mantém o id antigo e não pareia com o `openGym-N`.
+- Fontes embutidas como ttf/otf (sem ferramenta de woff2), cerca de 956 KB.
