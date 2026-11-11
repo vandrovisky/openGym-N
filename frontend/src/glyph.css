@@ -18,6 +18,7 @@
   --surface-2: #1a1a1a;
   --surface-3: #2a2a2a;
   --surface-raised: #1a1a1a;
+  --raised-line: rgba(255,255,255,.09);
 
   --label:     #f2f2f2;
   --label-2:   #8c8c8c;
@@ -48,6 +49,7 @@
   --surface-2: #f1f1f1;
   --surface-3: #d9d9d9;
   --surface-raised: #f1f1f1;
+  --raised-line: rgba(11,11,11,.10);
 
   --label:     #0b0b0b;
   --label-2:   #696969;
@@ -58,8 +60,35 @@
   --sep:       #d9d9d9;
   --sep-op:    #d9d9d9;
 
+  /* index.css redefines these under this same selector, so the skin repeats them here. */
+  --blue:var(--label-2); --green:var(--label-2); --orange:var(--label-2); --yellow:var(--label-2);
+  --teal:var(--label-2); --indigo:var(--label-2); --pink:var(--label-2); --purple:var(--label-2);
+  --mint:var(--label-2); --brown:var(--label-2);
+  --red:var(--live);
+
   --acc:#0b0b0b;
   --acc-2:#3a3a3a;
   --on-acc:#ffffff;
   --acc-ink:#0b0b0b;
+}
+
+/* Increase Contrast: index.css puts brighter system colours and firmer greys under this same
+   condition. The skin keeps its greys and its one red, and firms up the quiet text and the lines. */
+@media (prefers-contrast: more) {
+  :root {
+    --blue:var(--label-2); --green:var(--label-2); --orange:var(--label-2); --yellow:var(--label-2);
+    --teal:var(--label-2); --indigo:var(--label-2); --pink:var(--label-2); --purple:var(--label-2);
+    --mint:var(--label-2); --brown:var(--label-2);
+    --red:var(--live);
+    --label-2:#b8b8b8; --label-3:#8c8c8c; --label-4:#4a4a4a;
+    --sep:#4a4a4a; --sep-op:#4a4a4a;
+  }
+  :root[data-theme="light"] {
+    --blue:var(--label-2); --green:var(--label-2); --orange:var(--label-2); --yellow:var(--label-2);
+    --teal:var(--label-2); --indigo:var(--label-2); --pink:var(--label-2); --purple:var(--label-2);
+    --mint:var(--label-2); --brown:var(--label-2);
+    --red:var(--live);
+    --label-2:#4a4a4a; --label-3:#696969; --label-4:#b8b8b8;
+    --sep:#b8b8b8; --sep-op:#b8b8b8;
+  }
 }

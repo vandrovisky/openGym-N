@@ -5,9 +5,9 @@ import { useStore } from './store/useStore.js'
 import { useUI } from './store/useUI.js'
 import { bindUI } from './components/ui.jsx'
 import { setWeightDecimals } from './lib/format.js'
-import { accentValue, applyAccent } from './lib/accent.js'
-import { seasonAccent } from './lib/seasonal.js'
-import { GLYPH, PALETTE, skinAccent } from './lib/skin.js'
+import { applyAccent } from './lib/accent.js'
+import { effectiveAccent } from './lib/accent-choice.js'
+import { PALETTE } from './lib/skin.js'
 import { setLang, useLang, baseLang } from './lib/i18n.js'
 import { effectiveLang } from './lib/default-lang.js'
 import { setPlayOnSilent, setVibrate, setAlarmBuzzer, setNativeBuzzer } from './lib/sound.js'
@@ -162,7 +162,7 @@ function Shell() {
   // A preset key, or the user's own colour as '#rrggbb' (lib/accent.js), already checked. A
   // seasonal theme's colours stand in for it while that theme shows, and only when chosen
   // (Settings → Look & Home → Seasonal themes); the saved accent itself is never touched.
-  const accent = GLYPH ? skinAccent(resolveTheme(S.theme)) : (seasonAccent(S) || accentValue(S))
+  const accent = effectiveAccent(S, resolveTheme(S.theme))
   useEffect(() => { applyPrefs(S.theme, accent) }, [S.theme, accent])
   // 'system' needs to react live if the OS theme flips while the app is open, not just on
   // the next mount — a fixed 'dark'/'light' choice never re-fires this since matchMedia

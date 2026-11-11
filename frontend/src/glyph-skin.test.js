@@ -7,10 +7,13 @@ import { PALETTE } from './lib/skin.js'
 
 const read = f => readFileSync(resolve(process.cwd(), 'src', f), 'utf8')
 const css = read('glyph.css').replace(/\/\*[\s\S]*?\*\//g, '')
-const block = sel => {
+// The declarations of the top-level rule with exactly this selector (not one inside @media).
+const topLevel = css.replace(/@media[^{]*\{(?:[^{}]*\{[^}]*\})*\s*\}/g, '')
+const block = (sel, from = topLevel) => {
   const esc = sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return css.match(new RegExp(`(?:^|[}\\s])${esc}\\s*\\{([^}]*)\\}`))?.[1] || ''
+  return from.match(new RegExp(`(?:^|[}\\s])${esc}\\s*\\{([^}]*)\\}`))?.[1] || ''
 }
+const SYSTEM = ['--blue', '--green', '--orange', '--yellow', '--teal', '--indigo', '--pink', '--purple', '--mint', '--brown']
 
 describe('glyph.css', () => {
   it('defines the one red', () => {
@@ -20,6 +23,23 @@ describe('glyph.css', () => {
     const dark = block(':root').toLowerCase(), light = block(':root[data-theme="light"]').toLowerCase()
     for (const c of PALETTE.dark) expect(dark, c).toContain(c)
     for (const c of PALETTE.light) expect(light, c).toContain(c)
+  })
+  it('the light theme also greys the system colours and keeps the one red', () => {
+    // index.css redefines them under :root[data-theme="light"], which outranks a plain :root.
+    const light = block(':root[data-theme="light"]')
+    for (const c of SYSTEM) expect(light, c).toContain(`${c}:var(--label-2)`)
+    expect(light).toContain('--red:var(--live)')
+    expect(light).toMatch(/--raised-line:\s*rgba\(11,11,11/)
+  })
+  it("counters index.css's Increase Contrast block, in both themes", () => {
+    const media = css.match(/@media \(prefers-contrast: more\)\s*\{([\s\S]*)\}\s*$/)?.[1] || ''
+    expect(media).not.toBe('')
+    for (const sel of [':root', ':root[data-theme="light"]']) {
+      const b = block(sel, media)
+      for (const c of SYSTEM) expect(b, `${sel} ${c}`).toContain(`${c}:var(--label-2)`)
+      expect(b, sel).toContain('--red:var(--live)')
+      expect(b, sel).toContain('--label-2:#')
+    }
   })
   it('defines the three font tokens', () => {
     for (const f of ['--font-dot', '--font-ui', '--font-mono']) expect(block(':root')).toContain(f)
