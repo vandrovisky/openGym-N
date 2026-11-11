@@ -215,4 +215,19 @@ describe('LineChart dot matrix', () => {
     show(a, { series: [{ points: [], color: 'red' }] })
     expect(container.innerHTML).not.toContain('NaN')
   })
+
+  it('has nothing to hover on an empty-of-data chart: no marker, no tooltip, by mouse or touch', () => {
+    for (const pts of [[day(0, null), day(3, NaN)], [{ t: NaN, y: 3 }]]) {
+      show(pts)
+      const wrap = container.querySelector('.chart-i')
+      act(() => { wrap.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 50 })) })
+      act(() => { wrap.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 50 })) })
+      const touch = new Event('touchstart', { bubbles: true }); touch.touches = [{ clientX: 50 }]
+      act(() => { wrap.dispatchEvent(touch) })
+      expect(container.querySelector('.ctip')).toBeNull()
+      expect(container.querySelector('.cvl')).toBeNull()
+      expect(container.querySelector('.chl')).toBeNull()
+      expect(container.innerHTML).not.toContain('1970')
+    }
+  })
 })

@@ -148,7 +148,8 @@ export default function LineChart({ points, h = 150, unit = '', color = 'var(--a
 
   const last = pts[pts.length - 1]
   const lastCol = colOf(last.t)
-  const hoverSource = single ? [points[0]] : points
+  // With nothing real to point at (the placeholder point is only there to lay the grid out) there is nothing to hover.
+  const hoverSource = none ? [] : single ? [points[0]] : points
   const hoverDates = hoverSource.map(p => p.d || isoOf(new Date(p.t)))
   const showYear = new Set(hoverDates.map(iso => new Date(iso + 'T12:00:00').getFullYear())).size > 1
   // The marker sits on the dot of the point's column.
@@ -156,6 +157,7 @@ export default function LineChart({ points, h = 150, unit = '', color = 'var(--a
   const hoverPts = hoverSource.map((p, i) => ({ x: cx(colOf(p.t)), y: dotY(p), t: p.t, iso: hoverDates[i], v: p.y, note: p.note }))
 
   const onMove = e => {
+    if (!hoverPts.length) return
     const c = e.touches ? e.touches[0] : e
     if (!c || c.clientX === undefined) return
     const r = svgRef.current.getBoundingClientRect()

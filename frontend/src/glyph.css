@@ -259,12 +259,12 @@ div:has(>.swrow .setrow:not(.done)) ~ div .swrow .setrow:not(.done) .n{
 .sbar-dots{display:block;height:100%;max-width:100%;overflow:visible}
 .sbar-dots circle.off,.sstack-bar circle.off{fill:var(--surface-2)}
 .sbar-dots{margin-inline-end:auto}
-[dir="rtl"] .sbar-dots{transform:scaleX(-1)}   /* the lit dots start at the inline start */
+[dir="rtl"] .sbar-dots,[dir="rtl"] .sstack-bar svg{transform:scaleX(-1)}   /* the lit dots start at the inline start */
 .sbar-dots circle.on{fill:var(--label)}
 .sbar-dots circle.band{stroke:var(--label-3);stroke-width:1}
 .sbar-tick{fill:var(--label)}
 .sstack-bar{display:block;height:14px;border-radius:0;overflow:visible;background:none}
-.sstack-bar svg{display:block;height:100%;max-width:100%}
+.sstack-bar svg{display:block;height:100%;max-width:100%;margin-inline-end:auto}
 .slegend-m{border-radius:50%}
 .slegend-m.band{border-radius:50%;background:none;box-shadow:inset 0 0 0 1px var(--label-3)}
 .slegend-m.tick{border-radius:1px}
@@ -291,3 +291,4 @@ div:has(>.swrow .setrow:not(.done)) ~ div .swrow .setrow:not(.done) .n{
 .mrow .bar i{background:radial-gradient(circle at 4px 4px,var(--label) 2.2px,transparent 2.6px) 0 0/8px 8px repeat-x;border-radius:0}
 .slevel-bar{grid-template-columns:repeat(5,10px);gap:6px;justify-content:start}
 .slevel-bar span{width:10px;height:10px;border-radius:50%}
+[dir="rtl"] .mrow .bar{transform:scaleX(-1)}   /* fills from the inline start; the dots are symmetric */

@@ -151,6 +151,9 @@ describe('glyph.css', () => {
       expect(block('.hm-c.today')).toContain('var(--live)')
       expect(block('.sbar-dots circle.on')).toContain('var(--label)')
       expect(block('.sbar-dots circle.off,.sstack-bar circle.off')).toContain('var(--surface-2)')
+      // the lit dots start at the inline start in RTL too
+      expect(css).toMatch(/\[dir="rtl"\] \.sbar-dots,\[dir="rtl"\] \.sstack-bar svg\{transform:scaleX\(-1\)\}/)
+      expect(css).toMatch(/\[dir="rtl"\] \.mrow \.bar\{transform:scaleX\(-1\)\}/)
       expect(block('#timer .bar i.on')).toContain('var(--label)')
       expect(block('#timer.rest:not(.paused):not(.ready) .bar i.on')).toContain('var(--live)')
     })
