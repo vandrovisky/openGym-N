@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { PALETTE } from './lib/skin.js'
+import { contrast } from './lib/accent.js'
+import { readdirSync, statSync } from 'node:fs'
 
 const read = f => readFileSync(resolve(process.cwd(), 'src', f), 'utf8')
 const css = read('glyph.css').replace(/\/\*[\s\S]*?\*\//g, '')
@@ -104,10 +106,39 @@ describe('glyph.css', () => {
       expect(b).toContain('var(--surface-2)')
       expect(b).toContain('background-size:14px14px')
     })
-    it('turns every backdrop-filter off', () => {
+    it('turns every backdrop-filter off, for every selector the other stylesheets blur with', () => {
       const vals = [...css.matchAll(/backdrop-filter:\s*([^;}!]+)/g)].map(m => m[1].trim())
       expect(vals.length).toBeGreaterThan(0)
       for (const v of vals) expect(v).toBe('none')
+      // A bare `*` rule has specificity 0 and loses, so each blurred selector is listed by name.
+      const files = []
+      const walk = d => { for (const n of readdirSync(d)) { const p = resolve(d, n); statSync(p).isDirectory() ? walk(p) : /\.css$/.test(n) && files.push(p) } }
+      walk(resolve(process.cwd(), 'src'))
+      const mine = new Set()
+      for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g))
+        if (/(?:^|[;\s])backdrop-filter:\s*none/.test(m[2])) for (const s of m[1].split(',')) mine.add(s.trim().replace(/\s+/g, ' '))
+      const blurred = []
+      for (const f of files.filter(f => !f.endsWith('glyph.css'))) {
+        const src = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+        for (const m of src.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+          const v = m[2].match(/(?:^|[;\s])backdrop-filter:\s*([^;}]+)/)
+          if (v && v[1].trim() !== 'none') for (const s of m[1].split(',')) blurred.push(s.trim().replace(/\s+/g, ' '))
+        }
+      }
+      expect(blurred.length).toBeGreaterThan(5)
+      for (const s of blurred) expect(mine.has(s), `${s} blurs but glyph.css does not turn it off`).toBe(true)
+    }, 30000)
+    it('quiet text and shapes keep their contrast: inactive tab labels and the open-set outline use --label-2', () => {
+      // Tab labels sit on --bg; the open outline on the card (--surface). 4.5:1 for the text, 3:1 for the shape.
+      const at = (theme, i) => PALETTE[theme][i]
+      for (const theme of ['dark', 'light']) {
+        const label2 = at(theme, 5)   // --label-2 is the ramp's "grey" step
+        expect(contrast(label2, at(theme, 0)), `${theme} tab label`).toBeGreaterThanOrEqual(4.5)
+        expect(contrast(label2, at(theme, 1)), `${theme} open set`).toBeGreaterThanOrEqual(3)
+      }
+      expect(block('#tabbar button')).toMatch(/color:var\(--label-2\)/)
+      expect(block('.setrow:not(.done) .n,.setrow-side:not(.done)>.n')).toContain('var(--label-2)')
+      expect(Number(block('#tabbar button').match(/font-size:(\d+)px/)[1])).toBeGreaterThanOrEqual(10)
     })
     it('keeps the red to a handful of rules', () => {
       // The cap is 20 (the brief's 12 was a guess): running timer, PR badge, the current set,
@@ -138,20 +169,22 @@ describe('glyph.css', () => {
       const bar = block('#tabbar button').replace(/\s+/g, '')
       expect(bar).toContain('font-family:var(--font-mono)')
       expect(bar).toContain('text-transform:uppercase')
-      expect(bar).toContain('color:var(--label-3)')
+      expect(bar).toContain('color:var(--label-2)')
       expect(css).toMatch(/#tabbar button\.on[^{]*::before/)
     })
     it('a ticked set is a filled --label circle, an open one an outline in --label-3', () => {
       const done = block('.setrow.done .n,.setrow-side.done>.n').replace(/\s+/g, '')
       expect(done).toContain('background:var(--label)')
       const open = block('.setrow:not(.done) .n,.setrow-side:not(.done)>.n').replace(/\s+/g, '')
-      expect(open).toContain('var(--label-3)')
+      expect(open).toContain('var(--label-2)')
     })
     it('red marks the current set, the running rest, the PR badge, errors and destructive actions', () => {
       const red = sel => expect(css, sel).toMatch(new RegExp(sel.replace(/[.#()*+?[\]|]/g, '\\$&') + '[^{]*\\{[^}]*var\\(--live\\)'))
       red('#timer.rest:not(.paused):not(.ready) .t')
       red('.pr')
       red('.btn.danger')
+      red('.swrow .setrow:not(.done) .n')
+      red('#tabbar button.start.rec .cir::after')
     })
     it('neutralises the coloured ink tokens and the dark Increase Contrast --label-dim', () => {
       const root = block(':root').replace(/\s+/g, '')

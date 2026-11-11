@@ -173,7 +173,11 @@ body{
 :root[data-theme="light"] body{background-image:radial-gradient(circle,var(--surface-3) 1px,transparent 1.5px)}
 
 /* No glass anywhere: bars and sheets are solid. */
-*,*::before,*::after{-webkit-backdrop-filter:none;backdrop-filter:none}
+/* Each selector below is the one index.css or coach.css blurs with (same specificity, this file loads
+   later), so it wins; a bare `*` rule has specificity 0 and loses. glyph-skin.test.js reads every
+   stylesheet and fails when a blur appears that is not listed here. */
+.conn-bar,#tabbar,.stats-index,.whdr.stick,.exmedia .gifhint,.exmedia .giftoggle,#timer,.mback,#toast,
+.chat-hdr,.composer{-webkit-backdrop-filter:none;backdrop-filter:none}
 #tabbar,.conn-bar,.whdr.stick,.stats-index,.chat-hdr,.composer{background:var(--bg)}
 #timer,#toast{background:var(--surface-raised)}
 
@@ -185,6 +189,7 @@ body{
 #timer{border:1px solid var(--surface-3);box-shadow:none}
 #timer.countin{box-shadow:none}
 .lrow-i{background:var(--surface-2);color:var(--label)}
+.conn-a{background:var(--surface-3);color:var(--label)}
 
 /* Row separators: a dotted line, not a hairline. */
 .lrow+.lrow::before,.setrow+.setrow::before,.efftbl .r+.r::before{
@@ -209,14 +214,14 @@ body{
 #tabbar{border-top:1px solid var(--surface-2)}
 :root[data-theme="light"] #tabbar{background:var(--bg)}
 #tabbar button{
-  min-width:0;color:var(--label-3);font-family:var(--font-mono);font-size:9px;font-weight:400;
-  text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;
+  min-width:0;color:var(--label-2);font-family:var(--font-mono);font-size:10px;font-weight:400;
+  text-transform:uppercase;letter-spacing:0;white-space:nowrap;
 }
 #tabbar button .icn{color:inherit}
 #tabbar button.on{color:var(--label)}
 #tabbar button.on>span:last-child::before{
-  content:'';display:inline-block;width:5px;height:5px;margin-inline-end:3px;border-radius:50%;
-  background:currentColor;vertical-align:.08em;
+  content:'';display:inline-block;width:4px;height:4px;margin-inline-end:2px;border-radius:50%;
+  background:currentColor;vertical-align:.1em;
 }
 #tabbar button.start .cir{box-shadow:none}
 #tabbar button.start span{color:var(--label)}
@@ -225,12 +230,13 @@ body{
 #tabbar button.start.rec .cir::after{border-color:var(--live)}
 #tabbar button.start.rec>span:last-child::before{display:none}
 
-/* Sets: ticked is a filled --label circle, still to do an outline in --label-3. */
+/* Sets: ticked is a filled --label circle, still to do an outline in --label-2
+   (--label-3 is 2.3:1 on the dark card and 1.7:1 on the light one, under the 3:1 a shape needs). */
 .setrow.done .n,.setrow-side.done>.n{
   background:var(--label);color:var(--bg);box-shadow:none;opacity:1;
 }
 .setrow:not(.done) .n,.setrow-side:not(.done)>.n{
-  background:none;color:var(--label-2);box-shadow:inset 0 0 0 1px var(--label-3);
+  background:none;color:var(--label-2);box-shadow:inset 0 0 0 1px var(--label-2);
 }
 .setrow .n .failmark,.setrow-side>.n .failmark{background:var(--label-2);color:var(--bg)}
 /* The set in hand (the first one not ticked) wears the live red ring. Every open set gets it, then
@@ -238,7 +244,7 @@ body{
    own plain div, so the order is only reachable through that wrapper). */
 .swrow .setrow:not(.done) .n{color:var(--label);box-shadow:inset 0 0 0 2px var(--live)}
 div:has(>.swrow .setrow:not(.done)) ~ div .swrow .setrow:not(.done) .n{
-  color:var(--label-2);box-shadow:inset 0 0 0 1px var(--label-3);
+  color:var(--label-2);box-shadow:inset 0 0 0 1px var(--label-2);
 }
 
 /* A running rest: the clock and its bar in red; paused or ready, they go quiet. */
