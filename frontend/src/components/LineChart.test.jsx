@@ -147,3 +147,72 @@ describe('LineChart x axis', () => {
     expect(new Set(edge).size).toBe(edge.length)
   })
 })
+
+describe('LineChart dot matrix', () => {
+  const lit = () => [...container.querySelectorAll('svg g:not([aria-hidden]) circle')]
+  const offDots = () => container.querySelectorAll('svg g[aria-hidden="true"] circle')
+  const show = (points, extra = {}) => act(() => root.render(<LineChart points={points} unit="kg" {...extra} />))
+  const day = (n, y) => ({ t: Date.UTC(2026, 0, 1) + n * 864e5, y, d: isoOf(new Date(Date.UTC(2026, 0, 1) + n * 864e5)) })
+
+  it('draws a grid of unlit dots with one lit dot per column, the last one live', () => {
+    show([day(0, 50), day(10, 75), day(20, 100)])
+    expect(offDots().length).toBeGreaterThan(30)
+    expect(offDots().length).toBeLessThanOrEqual(12 * 34)
+    expect(lit()).toHaveLength(3)
+    const live = container.querySelectorAll('circle.lc-last')
+    expect(live).toHaveLength(1)
+    expect(live[0].getAttribute('fill')).toBe('var(--live)')
+    // rising series: the later dot sits higher (smaller cy)
+    const cys = lit().map(c => Number(c.getAttribute('cy')))
+    expect(cys[0]).toBeGreaterThan(cys[1]); expect(cys[1]).toBeGreaterThan(cys[2])
+  })
+
+  it('averages a long series per column instead of shrinking the dots', () => {
+    show(Array.from({ length: 400 }, (_, i) => day(i, 60 + (i % 7))))
+    expect(lit().length).toBeLessThanOrEqual(34)
+    const radii = new Set([...offDots()].map(c => c.getAttribute('r')))
+    expect([...radii].every(r => Number(r) >= 2.8)).toBe(true)
+    expect(container.querySelectorAll('svg circle').length).toBeLessThan(450)
+  })
+
+  it('flips the rows when the scale counts down', () => {
+    const pts = [day(0, 0), day(10, 4)]
+    show(pts)
+    const up = lit().map(c => Number(c.getAttribute('cy')))
+    show(pts, { invert: true })
+    const down = lit().map(c => Number(c.getAttribute('cy')))
+    expect(up[0]).toBeGreaterThan(up[1]); expect(down[0]).toBeLessThan(down[1])
+  })
+
+  it('survives empty, single, flat, all-zero and missing values without a NaN', () => {
+    const cases = {
+      single: [day(0, 80)],
+      flat: [day(0, 70), day(5, 70)],
+      zero: [day(0, 0), day(5, 0), day(9, 0)],
+      nulls: [day(0, null), day(3, undefined), day(5, NaN)],
+      mixed: [day(0, 80), day(3, null), day(5, 90)],
+      badTime: [{ t: NaN, y: 3 }, { t: undefined, y: 4 }],
+    }
+    for (const [name, pts] of Object.entries(cases)) {
+      show(pts)
+      expect(container.innerHTML, name).not.toContain('NaN')
+      expect(offDots().length, name).toBeGreaterThan(0)
+    }
+    show([day(0, null), day(3, NaN)])
+    expect(lit()).toHaveLength(0)                       // nothing to light: an unlit grid
+    show([day(0, 80)])
+    expect(lit()).toHaveLength(1)                       // a lone point is lit once
+    show([])
+    expect(container.textContent).toContain('No data yet')
+    expect(container.innerHTML).not.toContain('NaN')
+  })
+
+  it('draws several series as nested dots without a NaN', () => {
+    const a = [day(0, 5), day(4, 6)], b = [day(0, 5), day(4, 8)]
+    show(a, { series: [{ points: a, color: 'red' }, { points: b, color: 'blue' }] })
+    expect(container.innerHTML).not.toContain('NaN')
+    expect(lit().length).toBe(4)
+    show(a, { series: [{ points: [], color: 'red' }] })
+    expect(container.innerHTML).not.toContain('NaN')
+  })
+})

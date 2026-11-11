@@ -112,3 +112,13 @@ it.each([0, 1])('retains week start %i when switching the activity metric', week
   expect(dayLabels()).toEqual(labels)
   expect(host.textContent).toContain('More volume')
 })
+
+describe('Heatmap cells', () => {
+  it('draws an empty year as a grid of unlit cells, with no NaN', () => {
+    host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host)
+    act(() => root.render(<Heatmap S={{ workouts: [], unit: 'kg' }} />))
+    expect(host.querySelectorAll('.hm-grid .hm-c').length).toBe(53 * 7)
+    expect(host.querySelectorAll('.hm-grid .hm-c:not(.l0)')).toHaveLength(0)
+    expect(host.innerHTML).not.toContain('NaN')
+  })
+})

@@ -1,8 +1,16 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { fmtNum, fmtDate, MONTHS, isoOf } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
+import { litRow } from '../lib/dot-matrix.js'
 
 const W = 340   // viewBox width; the svg stretches to its container, height comes from `h`
+// The glyph skin draws the curve as a dot matrix: a grid of unlit dots (--surface-2), one lit dot
+// per column on the row of its value. A column is 10 units wide and a dot is never under 2.8 units
+// (about 2px of radius on a 320px phone), so a long series is averaged per column (litRow of the
+// column means) instead of shrinking the dots. At most 12 rows; the last column's dot is --live.
+const PITCH = 10, R_OFF = 2.8, R_ON = 3.8, MAX_ROWS = 12
+const finite = v => typeof v === 'number' && isFinite(v)
+const okPoint = p => p && finite(p.t) && finite(p.y)
 
 // points: [{ t: ms, y: num, d?: iso, m?: 0..1, note?: str }] sorted by t.
 //   m    marks the point — a second reading carried by the same dot (bigger and more solid =
@@ -50,12 +58,19 @@ export default function LineChart({ points, h = 150, unit = '', color = 'var(--a
   })
 
   if (!points || points.length === 0) return <div className="empty small">{t('No data yet')}</div>
+  // Points without a usable time or value are left out. Nothing left: the grid still draws, unlit.
+  const clean = points.filter(okPoint)
+  const none = clean.length === 0
+  if (none) points = [{ t: 0, y: 0 }]
+  else if (clean.length !== points.length) points = clean
+  if (Array.isArray(series)) series = series.map(s => ({ ...s, points: (s.points || []).filter(okPoint) }))
   const H = h
   const P = { l: axes ? (tickPrefix ? 44 : 34) : 8, r: 12, t: yHint?.hi ? 24 : 10, b: axes ? 22 : 8 }
   const single = points.length === 1
   const pts = single ? [points[0], points[0]] : points
   const multi = Array.isArray(series) && series.length > 0
-  const ys = multi ? series.flatMap(s => s.points.map(p => p.y)) : pts.map(p => p.y)
+  let ys = multi ? series.flatMap(s => s.points.map(p => p.y)) : pts.map(p => p.y)
+  if (!ys.length) ys = [0]
   let ymin = Math.min(...ys), ymax = Math.max(...ys)
   if (goal != null && isFinite(goal)) { ymin = Math.min(ymin, goal); ymax = Math.max(ymax, goal) }
   if (ymin === ymax) { ymin -= 1; ymax += 1 }
@@ -66,6 +81,24 @@ export default function LineChart({ points, h = 150, unit = '', color = 'var(--a
     const f = (y - ymin) / (ymax - ymin)
     return P.t + (invert ? f : 1 - f) * (H - P.t - P.b)
   }
+
+  // The dot grid: columns across the plot, rows up it, row 0 at the bottom (flipped by `invert`).
+  const gx0 = P.l, gx1 = W - P.r, gy0 = P.t, gy1 = H - P.b
+  const cols = Math.max(2, Math.floor((gx1 - gx0) / PITCH))
+  const rows = Math.max(3, Math.min(MAX_ROWS, Math.floor((gy1 - gy0) / PITCH)))
+  const cx = c => gx0 + (c + 0.5) * (gx1 - gx0) / cols
+  const cy = r => gy1 - (r + 0.5) * (gy1 - gy0) / rows
+  const colOf = tv => t1 === t0 ? Math.floor(cols / 2) : Math.max(0, Math.min(cols - 1, Math.round((tv - t0) / (t1 - t0) * (cols - 1))))
+  // The lit row of each column (the mean of the points that fall in it), null where none do.
+  const litOf = list => {
+    const acc = Array.from({ length: cols }, () => null)
+    list.forEach(p => { const c = colOf(p.t); const a = acc[c] || (acc[c] = { s: 0, n: 0, m: null }); a.s += p.y; a.n++; if (p.m != null) a.m = Math.max(a.m ?? 0, p.m) })
+    const rowsLit = litRow(acc.map(a => (a ? a.s / a.n : null)), rows, ymin, ymax)
+    return acc.map((a, c) => (rowsLit[c] == null ? null : { c, row: invert ? rows - 1 - rowsLit[c] : rowsLit[c], m: a.m }))
+  }
+  const lit = (multi ? series.map(s => litOf(s.points)) : [litOf(none ? [] : pts)]).map(l => l.filter(Boolean))
+  const off = []
+  for (let c = 0; c < cols; c++) for (let r = 0; r < rows; r++) off.push(<circle key={c + '_' + r} cx={cx(c)} cy={cy(r)} r={R_OFF} fill="var(--surface-2)" />)
 
   const gridlines = []
   if (axes) {
@@ -79,7 +112,6 @@ export default function LineChart({ points, h = 150, unit = '', color = 'var(--a
       const v = Math.round(v0 / step) * step || 0
       const y = Y(v)
       gridlines.push(<g key={'y' + v}>
-        <line x1={P.l} y1={y} x2={W - P.r} y2={y} stroke="var(--sep-op)" strokeWidth="1" />
         <text x={P.l - 5} y={y + 3.5} textAnchor="end" fontSize="9.5" fill="var(--label-2)">{tickPrefix}{fmtNum(v)}</text>
       </g>)
     }
@@ -109,20 +141,19 @@ export default function LineChart({ points, h = 150, unit = '', color = 'var(--a
       if (i % every) return
       const x = X(tk.t)
       gridlines.push(<g key={'x' + i}>
-        <line x1={x} y1={P.t} x2={x} y2={H - P.b} stroke="var(--sep-op)" strokeWidth="1" />
         <text x={x} y={H - 7} textAnchor={tk.anchor || 'middle'} fontSize="9.5" fill="var(--label-2)">{tk.txt}</text>
       </g>)
     })
   }
 
-  const poly = pts.map(p => X(p.t).toFixed(1) + ',' + Y(p.y).toFixed(1)).join(' ')
   const last = pts[pts.length - 1]
-  const gid = 'g' + Math.round(t0 % 1e7) + '_' + H
+  const lastCol = colOf(last.t)
   const hoverSource = single ? [points[0]] : points
   const hoverDates = hoverSource.map(p => p.d || isoOf(new Date(p.t)))
   const showYear = new Set(hoverDates.map(iso => new Date(iso + 'T12:00:00').getFullYear())).size > 1
-  const hoverPts = hoverSource.map((p, i) => ({ x: X(p.t), y: Y(p.y), t: p.t, iso: hoverDates[i], v: p.y, note: p.note }))
-  const marked = points.some(p => p.m != null)
+  // The marker sits on the dot of the point's column.
+  const dotY = (p, k = 0) => { const d = lit[k].find(l => l.c === colOf(p.t)); return d ? cy(d.row) : Y(p.y) }
+  const hoverPts = hoverSource.map((p, i) => ({ x: cx(colOf(p.t)), y: dotY(p), t: p.t, iso: hoverDates[i], v: p.y, note: p.note }))
 
   const onMove = e => {
     const c = e.touches ? e.touches[0] : e
@@ -141,40 +172,31 @@ export default function LineChart({ points, h = 150, unit = '', color = 'var(--a
       onMouseLeave={() => setHover(null)}
       onTouchStart={onMove} onTouchMove={onMove}>
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ aspectRatio: `${W}/${H}` }}>
-        <defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={color} stopOpacity=".18" />
-          <stop offset="1" stopColor={color} stopOpacity="0" />
-        </linearGradient></defs>
+        <g aria-hidden="true">{off}</g>
         {gridlines}
         {yHint?.hi && <text x="2" y="11" fontSize="9.5" fill="var(--label-2)">↑ {yHint.hi}</text>}
         {goal != null && isFinite(goal) && <>
           <line x1={P.l} y1={Y(goal)} x2={W - P.r} y2={Y(goal)} stroke="var(--gold-ink)" strokeWidth="1.6" strokeDasharray="7 4" />
           <text x={W - P.r - 2} y={Y(goal) - 5} textAnchor="end" fontSize="9.5" fontWeight="700" fill="var(--gold-ink)">{fmtNum(goal)}</text>
         </>}
-        {/* The first series is drawn widest and underneath, each next one thinner on top, so
-            lines that share their values show as nested stripes instead of hiding each other. */}
-        {multi ? series.map((s, k) => {
-          const sw = 2 + (series.length - 1 - k) * 2.4
-          return <g key={'s' + k}>
-            {s.points.length > 1 && <polyline points={s.points.map(p => X(p.t).toFixed(1) + ',' + Y(p.y).toFixed(1)).join(' ')}
-              fill="none" stroke={s.color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" />}
-            {s.points.map((p, i) => <circle key={i} cx={X(p.t)} cy={Y(p.y)} r={sw / 2 + 1.2} fill={s.color} />)}
-          </g>
-        }) : <>
-          <polygon points={`${P.l},${H - P.b} ${poly} ${X(last.t).toFixed(1)},${H - P.b}`} fill={`url(#${gid})`} />
-          <polyline points={poly} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-          {marked && pts.map((p, i) => (p.m == null ? null :
-            <circle key={'m' + i} cx={X(p.t)} cy={Y(p.y)} r={2.4 + p.m * 3} fill={color} opacity={0.3 + p.m * 0.7} />))}
-          <circle cx={X(last.t)} cy={Y(last.y)} r="4" fill={color} />
-        </>}
+        {/* The first series is drawn biggest and underneath, each next one smaller on top, so
+            series that share a dot show as nested rings instead of hiding each other. */}
+        {multi ? series.map((s, k) => <g key={'s' + k} fill={s.color}>
+          {lit[k].map(d => <circle key={d.c} cx={cx(d.c)} cy={cy(d.row)} r={R_ON + (series.length - 1 - k) * 1.3} />)}
+        </g>) : <g fill={color}>
+          {lit[0].map(d => d.c === lastCol ? null
+            : <circle key={d.c} cx={cx(d.c)} cy={cy(d.row)} r={R_ON + (d.m ?? 0) * 1.4} opacity={d.m == null ? 1 : 0.3 + d.m * 0.7} />)}
+          {/* The latest reading is the live one. */}
+          {lit[0].filter(d => d.c === lastCol).map(d => <circle key="last" className="lc-last" cx={cx(d.c)} cy={cy(d.row)} r={R_ON + 0.8} fill="var(--live)" />)}
+        </g>}
         {hover && <g>
           <line className="cvl" x1={hover.x} y1={P.t} x2={hover.x} y2={H - P.b} stroke="var(--label-3)" strokeWidth="1" strokeDasharray="3 3" />
           {multi
             ? series.map((s, k) => s.points.filter(p => p.t === hover.t).map((p, i) =>
-              <circle key={k + '_' + i} cx={X(p.t)} cy={Y(p.y)} r="4.5" fill={s.color} stroke="var(--bg)" strokeWidth="2" />))
+              <circle key={k + '_' + i} cx={cx(colOf(p.t))} cy={dotY(p, k)} r={R_ON + 1.4} fill={s.color} stroke="var(--bg)" strokeWidth="2" />))
             : <>
               <line className="chl" x1={P.l} y1={hover.y} x2={W - P.r} y2={hover.y} stroke="var(--label-3)" strokeWidth="1" strokeDasharray="3 3" />
-              <circle cx={hover.x} cy={hover.y} r="5" fill={color} stroke="var(--bg)" strokeWidth="2" />
+              <circle cx={hover.x} cy={hover.y} r={R_ON + 1.4} fill={color} stroke="var(--bg)" strokeWidth="2" />
             </>}
         </g>}
       </svg>

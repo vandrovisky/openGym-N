@@ -2,10 +2,20 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useUI } from '../store/useUI.js'
 import { t } from '../lib/i18n.js'
 import { REST_MAX } from '../lib/duration.js'
+import { ringDots } from '../lib/dot-matrix.js'
 import { durationSheet } from './DurationWheel.jsx'
 import { Button } from './ui.jsx'
 import Icon from './Icon.jsx'
 import { SeasonDeco } from './Seasonal.jsx'
+
+// The bar along the top edge is a row of dots (glyph skin): the share still to run is lit, dropping
+// off from the end as the time goes. ringDots counts from the first dot, so it is the same helper
+// the rings use. A flex row of spans, not an svg, so the dots stay round at any width.
+const BAR_DOTS = 30
+function DotBar({ pct }) {
+  const on = ringDots(BAR_DOTS, pct / 100)
+  return <div className="bar" aria-hidden="true" data-lit={on.filter(Boolean).length}>{on.map((l, i) => <i key={i} className={l ? 'on' : undefined} />)}</div>
+}
 
 const clock = sec => Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0')
 
@@ -112,14 +122,14 @@ export default function RestTimer() {
   // reads a region that changes, not one that arrives with its words already in it).
   const say = <span className="vh" role="status" aria-live="polite">{autoSay}</span>
   if (!on) return say
-  const pct = Math.max(0, Math.min(100, ((on.left ?? on.total) / on.total) * 100))
+  const pct = Math.max(0, Math.min(100, ((on.left ?? on.total) / on.total) * 100)) || 0
 
   if (countIn) {
     const n = countIn.left ?? countIn.total
     const name = countIn.owner?.label || ''
     return <>{say}
       <div id="timer" className={'countin auto' + (countIn.paused ? ' paused' : '')}>
-        <div className="bar" aria-hidden="true"><i style={{ transform: `scaleX(${pct / 100})` }} /></div>
+        <DotBar pct={pct} />
         <div className="tclock">
           <span className="t" key={n} aria-hidden="true">{n}</span>
           <span className="lbl">{countIn.waiting ? t('Waiting till you close that') : t('Get ready: {0}', name)}</span>
@@ -131,13 +141,10 @@ export default function RestTimer() {
       </div>
     </>
   }
-  // The bar shrinks by transform, not width: a width transition lays the page out again on every
-  // frame of every rest (~45 layouts a second), a scaled bar is the compositor's alone.
-
   // A hold that runs itself trades Cancel for the chain's row: Restart and Stop auto cover it.
   if (work) return <>{say}
     <div id="timer" className={'working' + (work.auto ? ' auto' : '') + (work.paused ? ' paused' : '')}>
-      <div className="bar" aria-hidden="true"><i style={{ transform: `scaleX(${pct / 100})` }} /></div>
+      <DotBar pct={pct} />
       <div className="tclock">
         <span className="t">{work.left <= 0 && work.overtime ? '+' + clock(-work.left) : clock(work.left)}</span>
         {work.label && <span className="lbl">{work.paused ? t('Paused') + ' · ' + work.label : work.label}</span>}
@@ -162,7 +169,7 @@ export default function RestTimer() {
   const autoNext = !timer.ready && timer.autoNext
   return <>{say}
     <div id="timer" data-tour="rest" className={'rest' + (timer.paused ? ' paused' : '') + (timer.kind === 'switch' ? ' switch' : '') + (timer.ready ? ' ready' : '') + (autoNext ? ' auto' : '')}>
-      <div className="bar" aria-hidden="true"><i style={{ transform: `scaleX(${pct / 100})` }} /></div>
+      <DotBar pct={pct} />
       <SeasonDeco spot="rest-timer" workout />
       <button type="button" className="tclock" onClick={adjustRestSheet}
         aria-label={(timer.ready ? t('Ready') : clock(timer.left)) + '. ' + t('Change the time left')}>

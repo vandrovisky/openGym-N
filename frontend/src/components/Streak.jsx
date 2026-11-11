@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react'
 import { useStore } from '../store/useStore.js'
 import { t, tn } from '../lib/i18n.js'
 import { STREAK_BADGES, FREEZE_MAX, streakCelebration } from '../lib/streak.js'
+import { ringDots } from '../lib/dot-matrix.js'
 import { reducedMotion } from '../lib/use-swipe-row.js'
 import { vibrate } from '../lib/sound.js'
 import Icon from './Icon.jsx'
@@ -107,6 +108,9 @@ export function StreakBadges ({ info }) {
   </div>
 }
 
+// Dots on the way to the next badge (glyph skin): lit ones are the share of the way done.
+const NEXT_DOTS = 20
+
 /** Stats: the streak with its best, the freezes, the badges and how far the next one is. */
 export function StreakCard ({ info }) {
   const hint = info.freezes >= FREEZE_MAX
@@ -128,8 +132,8 @@ export function StreakCard ({ info }) {
     {info.next
       ? <div className="streak-next">
         <div className="pbar-t small"><span>{nextLine}</span><span className="pbar-n">{info.current} / {info.next}</span></div>
-        <div className="pbar" role="progressbar" aria-label={nextLine} aria-valuemin={0} aria-valuemax={info.next} aria-valuenow={Math.min(info.current, info.next)}>
-          <i style={{ '--p': Math.min(1, info.current / info.next) }} />
+        <div className="pbar pdots" role="progressbar" aria-label={nextLine} aria-valuemin={0} aria-valuemax={info.next} aria-valuenow={Math.min(info.current, info.next)}>
+          {ringDots(NEXT_DOTS, info.current / info.next).map((on, i) => <i key={i} className={on ? 'on' : undefined} />)}
         </div>
       </div>
       : null}

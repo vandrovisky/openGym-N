@@ -61,10 +61,20 @@ describe('Stats card', () => {
     const bar = el.querySelector('[role="progressbar"]')
     expect(bar.getAttribute('aria-valuenow')).toBe('13')
     expect(bar.getAttribute('aria-valuemax')).toBe('26')
-    expect(bar.querySelector('i').style.getPropertyValue('--p')).toBe('0.5')
+    expect(bar.querySelectorAll('i')).toHaveLength(20)
+    expect(bar.querySelectorAll('i.on')).toHaveLength(10)   // 13 of 26 weeks: half the dots
     expect(el.textContent).toContain('13 / 26')
     expect(el.textContent).toContain('Next badge at 26 weeks.')
     expect(el.textContent).toContain('3 more weeks with a workout earn a freeze.')
+  })
+
+  it('lights no dots at the start, every dot past the goal, and never writes a NaN', () => {
+    for (const [cur, lit] of [[0, 0], [99, 20], [-3, 0]]) {
+      const el = render(<StreakCard info={info({ current: cur, next: 26 })} />)
+      expect(el.querySelectorAll('.pbar i')).toHaveLength(20)
+      expect(el.querySelectorAll('.pbar i.on'), String(cur)).toHaveLength(lit)
+      expect(el.innerHTML).not.toContain('NaN')
+    }
   })
 
   it('has no bar once every badge is collected', () => {

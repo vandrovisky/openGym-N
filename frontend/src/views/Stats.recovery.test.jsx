@@ -491,9 +491,9 @@ describe('Stats strength exercise rows', () => {
     expect(row).toBeTruthy()
     const pct = row.querySelector('.sbar-v').textContent.match(/(\d+)%/)[1]
     expect(Number(pct)).toBeLessThan(100)
-    const fill = row.querySelector('.sbar-f')
-    expect(fill.style.width).toBe(pct + '%')
-    expect(fill.getAttribute('style')).not.toMatch(/to right|gradient/)
+    // the dots (12 a row) are lit by the same fraction, from the first dot (CSS mirrors them for RTL)
+    expect(row.querySelectorAll('.sbar-dots circle.on')).toHaveLength(Math.max(1, Math.round(Number(pct) / 100 * 12)))
+    expect(row.querySelector('.sbar-dots').getAttribute('style')).toBeNull()
   })
 })
 

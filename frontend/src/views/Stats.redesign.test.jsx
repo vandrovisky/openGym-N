@@ -114,14 +114,14 @@ describe('Stats redesign: Muscles', () => {
     const chest = rowOf('chest')
     expect(chest.querySelector('.sbar-v').textContent).toBe('8 / 10–20')
     expect(chest.classList.contains('below')).toBe(true)
-    expect(chest.querySelector('.sbar-band')).toBeTruthy()
+    expect(chest.querySelector('.sbar-dots circle.band')).toBeTruthy()
     // the plan (12 chest sets a week) is a tick on this week's bar, and said in words
     expect(chest.querySelector('.sbar-tick')).toBeTruthy()
     expect(chest.getAttribute('aria-label')).toBe('Chest: 8 sets, Target range 10–20, room for more, Planned 12 sets')
     click(muscles().querySelector('.weekly-volume-toggle'))
     expect(rows()).toHaveLength(TARGET_MUSCLES.length + 1)
     // a muscle without a range has no band
-    expect(rowOf('forearm').querySelector('.sbar-band')).toBeNull()
+    expect(rowOf('forearm').querySelector('.sbar-dots circle.band')).toBeNull()
     expect(rowOf('forearm').querySelector('.sbar-v').textContent).toBe('2')
   })
 
@@ -129,7 +129,7 @@ describe('Stats redesign: Muscles', () => {
     mount(small({ workouts: [done('2026-09-30', 'chest', 14), done('2026-09-30', 'biceps', 30)] }))
     expect(rowOf('chest').classList.contains('in')).toBe(true)
     expect(rowOf('biceps').classList.contains('above')).toBe(true)
-    for (const r of rows()) expect(r.querySelector('.sbar-f').style.background).toBe('')
+    for (const r of rows()) for (const c of r.querySelectorAll('.sbar-dots circle')) expect(c.getAttribute('style')).toBeNull()
   })
 
   it('switches to the plan: Planned counts the routines of a week, a running rotation too', () => {

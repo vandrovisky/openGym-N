@@ -146,6 +146,14 @@ describe('glyph.css', () => {
       const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => /var\(--live\)/.test(m[2]))
       expect(rules.length).toBeLessThanOrEqual(20)
     })
+    it('dot-matrix charts: round heatmap cells, today ringed in the live red, lit dots --label, unlit --surface-2', () => {
+      expect(block('.hm-c,.hm-c.future,.hm-c.noted')).toContain('border-radius:50%')
+      expect(block('.hm-c.today')).toContain('var(--live)')
+      expect(block('.sbar-dots circle.on')).toContain('var(--label)')
+      expect(block('.sbar-dots circle.off,.sstack-bar circle.off')).toContain('var(--surface-2)')
+      expect(block('#timer .bar i.on')).toContain('var(--label)')
+      expect(block('#timer.rest:not(.paused):not(.ready) .bar i.on')).toContain('var(--live)')
+    })
     it('cards are flat: surface fill, a --surface-2 line, no shadow', () => {
       const b = block('.card,.item,.sect-b,.efftbl').replace(/\s+/g, '')
       expect(b).toContain('background:var(--surface)')

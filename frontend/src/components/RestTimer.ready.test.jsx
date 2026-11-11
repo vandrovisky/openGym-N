@@ -33,6 +33,20 @@ afterEach(() => {
 
 const mount = () => act(() => root.render(<RestTimer />))
 
+describe('RestTimer dot bar', () => {
+  it('lights the share of the rest still to run, and shows no NaN for a rest of nothing', () => {
+    act(() => useUI.getState().startRest(60))
+    mount()
+    expect(host.querySelectorAll('#timer .bar i.on')).toHaveLength(30)
+    act(() => vi.advanceTimersByTime(30000))
+    expect(host.querySelectorAll('#timer .bar i.on')).toHaveLength(15)
+    act(() => useUI.setState({ timer: { ...useUI.getState().timer, total: 0, left: 0 } }))
+    expect(host.querySelectorAll('#timer .bar i')).toHaveLength(30)
+    expect(host.querySelectorAll('#timer .bar i.on')).toHaveLength(0)
+    expect(host.innerHTML).not.toContain('NaN')
+  })
+})
+
 describe('RestTimer Ready and overtime display', () => {
   it('keeps Ready and its Dismiss action across a remount', () => {
     act(() => useUI.getState().startRest(1, 4))
@@ -58,7 +72,8 @@ describe('RestTimer Ready and overtime display', () => {
     act(() => vi.advanceTimersByTime(5000))
 
     expect(host.querySelector('#timer .t').textContent).toBe('+0:03')
-    expect(host.querySelector('#timer .bar i').style.transform).toBe('scaleX(0)')
+    expect(host.querySelectorAll('#timer .bar i')).toHaveLength(30)
+    expect(host.querySelectorAll('#timer .bar i.on')).toHaveLength(0)   // nothing left: every dot unlit
   })
 })
 
