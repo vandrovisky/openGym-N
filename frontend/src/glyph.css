@@ -4,13 +4,24 @@
    without touching a view. The colours are lib/skin.js PALETTE (glyph-skin.test.js keeps the two
    in step): bg, s1, s2, s3, mute, grey, fg.
    ========================================================================== */
+/* Fonts (OFL 1.1, NOTICE.md), embedded: nothing comes from the network. */
+@font-face{font-family:'Doto';src:url(./fonts/Doto-Variable.ttf) format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url(./fonts/SpaceGrotesk-Light.otf) format('opentype');font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url(./fonts/SpaceGrotesk-Regular.otf) format('opentype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url(./fonts/SpaceGrotesk-Medium.otf) format('opentype');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url(./fonts/SpaceGrotesk-SemiBold.otf) format('opentype');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url(./fonts/SpaceGrotesk-Bold.otf) format('opentype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Mono';src:url(./fonts/SpaceMono-Regular.ttf) format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Mono';src:url(./fonts/SpaceMono-Bold.ttf) format('truetype');font-weight:700;font-style:normal;font-display:swap}
+
 :root {
   --live: #d71921;   /* live things only: a running timer, a record. Never the accent. */
 
-  /* Task 2 loads the real faces; until then the system fonts stand in. */
-  --font-dot:  ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --font-ui:   -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* Real faces below (@font-face). The stacks end in a system face: ru, uk, ar, zh, ko, th, hi and bn
+     are not covered by Space Grotesk, Space Mono or Doto, and the browser falls back per glyph. */
+  --font-dot:  'Doto', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-ui:   'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
 
   --bg:        #000000;
   --bg-el:     #0e0e0e;
@@ -91,4 +102,50 @@
     --label-2:#4a4a4a; --label-3:#696969; --label-4:#b8b8b8;
     --sep:#b8b8b8; --sep-op:#b8b8b8;
   }
+}
+
+/* ==========================================================================
+   Type. UI text is Space Grotesk; labels and small numbers are Space Mono; Doto is only for
+   numbers, and only at 26px or more (the dots blur below that), so every rule that picks
+   var(--font-dot) also carries its px size (a clamp() with a 26px floor counts; glyph-skin.test.js).
+   ========================================================================== */
+body{font-family:var(--font-ui)}
+
+/* Doto's axes: round dots, heaviest weight. Used with each rule's own size, or the .dot-num class. */
+.dot-num,#timer .t,.streak-num,.dw-read,.recap-v,.bw-read,.stat-v,.tile .v:not(.v-sm){
+  font-variation-settings:"ROND" 100,"wght" 900;font-weight:900;line-height:.85;
+}
+.dot-num{
+  font-family:var(--font-dot);font-size:26px;white-space:nowrap;
+  font-variation-settings:"ROND" 100,"wght" 900;font-weight:900;line-height:.85;
+}
+#timer .t{font-family:var(--font-dot);font-size:28px;letter-spacing:0}
+.streak-num{font-family:var(--font-dot);font-size:34px;letter-spacing:0}
+.dw-read{font-family:var(--font-dot);font-size:34px;letter-spacing:0;white-space:nowrap}
+.recap-v{font-family:var(--font-dot);font-size:26px;letter-spacing:0;white-space:normal;overflow:visible;overflow-wrap:anywhere;line-height:1}
+.bw-read{font-family:var(--font-dot);font-size:clamp(32px,14vw,52px);letter-spacing:0;white-space:nowrap}
+.bw-read .u{font-family:var(--font-mono);font-size:19px;font-weight:400;line-height:1}
+.stat-v{font-family:var(--font-dot);font-size:26px;letter-spacing:0}
+.tile .v:not(.v-sm){font-family:var(--font-dot);font-size:26px;letter-spacing:0}
+
+/* Numbers under 26px: Space Mono. The set row's fields are 39 to 48px wide (--num in index.css),
+   so Doto cannot fit there; Mono at 15px keeps 227.5 whole. */
+.tab-time,.lib-fn,.search .search-count,.timef,.whdr-mid .sub,.wvol,.fv-speed .chip,.mviewer-count,
+.effcell,.effcell-stp .val,.effpick .effpick-n,.efftbl .n,.stp .num,.stp .val,.plateline .moves,
+.mrow .v.sess,.mrow .v.cmp,.streak-badge .n,.pbar-n,.ch-sub,.datep-grid .cal-d,.datep-m,.wchip,
+.ci-card .ci-value,.ci-reorder .ci-pos,.dw-it,.gym-size small,.sbar-v,.slegend-v,.mus-miss-n,
+.slevel-meta,.ex-day-s,.kpis .tile .v,.setrow .n{
+  font-family:var(--font-mono);
+}
+.setrow .stp .num{font-size:15px;letter-spacing:-.04em}
+.setrow.eff3 .stp .num{font-size:13px}
+
+/* Small labels: section titles and column heads. Mono, uppercase, wide. Never on running text or
+   exercise names. Tracking breaks the joined scripts, so those keep none. */
+.sect-t,h4.sec,.card h2,.tile .l,.sethead,.efftbl .hd .n,.efftbl .hd .f{
+  font-family:var(--font-mono);font-size:var(--fs-caption2);font-weight:400;
+  text-transform:uppercase;letter-spacing:.14em;
+}
+:lang(ar,fa,ur,he,hi,bn,th) :is(.sect-t,h4.sec,.card h2,.tile .l,.sethead,.efftbl .hd .n,.efftbl .hd .f){
+  letter-spacing:normal;text-transform:none;
 }

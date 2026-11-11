@@ -162,3 +162,11 @@ by the Capawesome Team (Robin Genz), a Capacitor wrapper around Google's ML Kit,
 **Apache License 2.0**. openGym pins the `7.x` line to stay on Capacitor 7. The full license text is
 available at <https://www.apache.org/licenses/LICENSE-2.0> and in the package's own `LICENSE` file.
 The decoded string is what openGym keeps; the photo itself is never stored.
+
+### Fonts (the glyph skin) — Doto, Space Grotesk, Space Mono
+
+The personal skin embeds three typefaces, all under the **SIL Open Font License 1.1** (full text in
+`frontend/src/fonts/OFL.txt`): [**Doto**](https://github.com/oliverlalan/Doto) by Oliver Lalan (the
+dot numerals), [**Space Grotesk**](https://github.com/floriankarsten/space-grotesk) by Florian
+Karsten (interface text) and [**Space Mono**](https://github.com/googlefonts/spacemono) by Colophon
+Foundry (labels and small numbers). They are bundled with the app and never fetched from a server.
