@@ -7,7 +7,7 @@ android {
         buildConfig = true
     }
     defaultConfig {
-        applicationId "ch.duartesantos.opengym"
+        applicationId "io.github.vandrovisky.opengymn"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 31
