@@ -96,4 +96,69 @@ describe('glyph.css', () => {
       expect(css).toMatch(/letter-spacing:\s*\.14em/)
     })
   })
+
+  describe('shapes', () => {
+    it('draws the dot grid on the body with --surface-2, not inside the cards', () => {
+      const b = block('body').replace(/\s+/g, '')
+      expect(b).toContain('radial-gradient')
+      expect(b).toContain('var(--surface-2)')
+      expect(b).toContain('background-size:14px14px')
+    })
+    it('turns every backdrop-filter off', () => {
+      const vals = [...css.matchAll(/backdrop-filter:\s*([^;}!]+)/g)].map(m => m[1].trim())
+      expect(vals.length).toBeGreaterThan(0)
+      for (const v of vals) expect(v).toBe('none')
+    })
+    it('keeps the red to a handful of rules', () => {
+      // The cap is 20 (the brief's 12 was a guess): running timer, PR badge, the current set,
+      // errors and destructive actions, each with its own selectors. More means red is spreading.
+      const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => /var\(--live\)/.test(m[2]))
+      expect(rules.length).toBeLessThanOrEqual(20)
+    })
+    it('cards are flat: surface fill, a --surface-2 line, no shadow', () => {
+      const b = block('.card,.item,.sect-b,.efftbl').replace(/\s+/g, '')
+      expect(b).toContain('background:var(--surface)')
+      expect(b).toContain('border:1pxsolidvar(--surface-2)')
+      expect(b).toContain('box-shadow:none')
+    })
+    it('the main button is a --label pill in uppercase Space Mono', () => {
+      const b = block('.btn.primary').replace(/\s+/g, '')
+      expect(b).toContain('background:var(--label)')
+      expect(b).toContain('color:var(--bg)')
+      expect(b).toContain('border-radius:99px')
+      expect(b).toContain('font-family:var(--font-mono)')
+      expect(b).toContain('text-transform:uppercase')
+      expect(b).toContain('letter-spacing:.16em')
+    })
+    it('row separators are dotted --surface-3', () => {
+      expect(css).toMatch(/\.setrow\+\.setrow::before[^{]*\{[^}]*dotted/)
+      expect(css.replace(/\s+/g, '')).toContain('1pxdottedvar(--surface-3)')
+    })
+    it('the tab bar is Space Mono caps, the lit tab --label with a dot before it', () => {
+      const bar = block('#tabbar button').replace(/\s+/g, '')
+      expect(bar).toContain('font-family:var(--font-mono)')
+      expect(bar).toContain('text-transform:uppercase')
+      expect(bar).toContain('color:var(--label-3)')
+      expect(css).toMatch(/#tabbar button\.on[^{]*::before/)
+    })
+    it('a ticked set is a filled --label circle, an open one an outline in --label-3', () => {
+      const done = block('.setrow.done .n,.setrow-side.done>.n').replace(/\s+/g, '')
+      expect(done).toContain('background:var(--label)')
+      const open = block('.setrow:not(.done) .n,.setrow-side:not(.done)>.n').replace(/\s+/g, '')
+      expect(open).toContain('var(--label-3)')
+    })
+    it('red marks the current set, the running rest, the PR badge, errors and destructive actions', () => {
+      const red = sel => expect(css, sel).toMatch(new RegExp(sel.replace(/[.#()*+?[\]|]/g, '\\$&') + '[^{]*\\{[^}]*var\\(--live\\)'))
+      red('#timer.rest:not(.paused):not(.ready) .t')
+      red('.pr')
+      red('.btn.danger')
+    })
+    it('neutralises the coloured ink tokens and the dark Increase Contrast --label-dim', () => {
+      const root = block(':root').replace(/\s+/g, '')
+      for (const k of ['--green-ink', '--orange-ink', '--streak-ink', '--win-ink', '--gold-ink']) expect(root, k).toContain(`${k}:var(--label-2)`)
+      expect(root).toContain('--red-ink:var(--live)')
+      const media = css.match(/@media \(prefers-contrast: more\)\s*\{([\s\S]*)\}\s*$/)?.[1] || ''
+      expect(block(':root', media)).toContain('--label-dim:var(--label-2)')
+    })
+  })
 })

@@ -51,6 +51,10 @@
   --acc-2:#c2c2c2;
   --on-acc:#000000;
   --acc-ink:#f2f2f2;
+
+  /* index.css's coloured ink tokens (status text, streak, win, gold) read as grey; red text is the live red. */
+  --streak-ink:var(--label-2); --win-ink:var(--label-2); --gold-ink:var(--label-2);
+  --green-ink:var(--label-2); --orange-ink:var(--label-2); --red-ink:var(--live);
 }
 
 :root[data-theme="light"] {
@@ -81,6 +85,9 @@
   --acc-2:#3a3a3a;
   --on-acc:#ffffff;
   --acc-ink:#0b0b0b;
+
+  --streak-ink:var(--label-2); --win-ink:var(--label-2); --gold-ink:var(--label-2);
+  --green-ink:var(--label-2); --orange-ink:var(--label-2); --red-ink:var(--live);
 }
 
 /* Increase Contrast: index.css puts brighter system colours and firmer greys under this same
@@ -91,7 +98,7 @@
     --teal:var(--label-2); --indigo:var(--label-2); --pink:var(--label-2); --purple:var(--label-2);
     --mint:var(--label-2); --brown:var(--label-2);
     --red:var(--live);
-    --label-2:#b8b8b8; --label-3:#8c8c8c; --label-4:#4a4a4a;
+    --label-2:#b8b8b8; --label-3:#8c8c8c; --label-4:#4a4a4a; --label-dim:var(--label-2);
     --sep:#4a4a4a; --sep-op:#4a4a4a;
   }
   :root[data-theme="light"] {
@@ -99,7 +106,7 @@
     --teal:var(--label-2); --indigo:var(--label-2); --pink:var(--label-2); --purple:var(--label-2);
     --mint:var(--label-2); --brown:var(--label-2);
     --red:var(--live);
-    --label-2:#4a4a4a; --label-3:#696969; --label-4:#b8b8b8;
+    --label-2:#4a4a4a; --label-3:#696969; --label-4:#b8b8b8; --label-dim:var(--label-2);
     --sep:#b8b8b8; --sep-op:#b8b8b8;
   }
 }
@@ -109,7 +116,12 @@
    numbers, and only at 26px or more (the dots blur below that), so every rule that picks
    var(--font-dot) also carries its px size (a clamp() with a 26px floor counts; glyph-skin.test.js).
    ========================================================================== */
-body{font-family:var(--font-ui)}
+body{
+  font-family:var(--font-ui);
+  background-color:var(--bg);
+  background-image:radial-gradient(circle,var(--surface-2) 1px,transparent 1.5px);
+  background-size:14px 14px;
+}
 
 /* Doto's axes: round dots, heaviest weight. Used with each rule's own size, or the .dot-num class. */
 .dot-num,#timer .t,.streak-num,.dw-read,.recap-v,.bw-read,.stat-v,.tile .v:not(.v-sm){
@@ -149,3 +161,89 @@ body{font-family:var(--font-ui)}
 :lang(ar,fa,ur,he,hi,bn,th) :is(.sect-t,h4.sec,.card h2,.tile .l,.sethead,.efftbl .hd .n,.efftbl .hd .f){
   letter-spacing:normal;text-transform:none;
 }
+
+/* ==========================================================================
+   Shapes. Flat: a card is a --surface fill with a --surface-2 line, no shadow, no blur. The page
+   behind them carries a 14px dot grid. Red (--live) marks live things only: the set in hand, a
+   running rest, a record, a destructive action.
+   ========================================================================== */
+
+/* The dot grid (on body, in the Type block above) sits on the page, never inside a card: cards paint
+   their own fill. Light needs the darker step to show at all. */
+:root[data-theme="light"] body{background-image:radial-gradient(circle,var(--surface-3) 1px,transparent 1.5px)}
+
+/* No glass anywhere: bars and sheets are solid. */
+*,*::before,*::after{-webkit-backdrop-filter:none;backdrop-filter:none}
+#tabbar,.conn-bar,.whdr.stick,.stats-index,.chat-hdr,.composer{background:var(--bg)}
+#timer,#toast{background:var(--surface-raised)}
+
+.card,.item,.sect-b,.efftbl{
+  background:var(--surface);border:1px solid var(--surface-2);box-shadow:none;
+}
+.sheet{border:1px solid var(--surface-2);border-bottom:0;box-shadow:none}
+.routine-drag-row.is-dragging .item{box-shadow:none}
+#timer{border:1px solid var(--surface-3);box-shadow:none}
+#timer.countin{box-shadow:none}
+.lrow-i{background:var(--surface-2);color:var(--label)}
+
+/* Row separators: a dotted line, not a hairline. */
+.lrow+.lrow::before,.setrow+.setrow::before,.efftbl .r+.r::before{
+  background:none;height:0;border-top:1px dotted var(--surface-3);
+}
+.setsep,.setph::after{background:none;height:0;border-top:1px dotted var(--surface-3)}
+.setph::after{flex:1}
+
+/* The main button: a --label pill, caps in Space Mono. */
+.btn.primary{
+  background:var(--label);color:var(--bg);border-radius:99px;
+  font-family:var(--font-mono);font-size:var(--fs-subhead);font-weight:700;
+  text-transform:uppercase;letter-spacing:.16em;
+}
+.btn.primary:active{background:var(--label-2)}
+.btn.tinted{background:var(--surface-2);color:var(--label)}
+:lang(ar,fa,ur,he,hi,bn,th) .btn.primary{letter-spacing:normal;text-transform:none}
+/* Destructive: an outline in the live red, the words in the text colour. */
+.btn.danger{background:none;box-shadow:inset 0 0 0 1px var(--live);color:var(--label)}
+
+/* Tab bar: Space Mono caps, the lit tab in --label with a dot before its name. */
+#tabbar{border-top:1px solid var(--surface-2)}
+:root[data-theme="light"] #tabbar{background:var(--bg)}
+#tabbar button{
+  min-width:0;color:var(--label-3);font-family:var(--font-mono);font-size:9px;font-weight:400;
+  text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;
+}
+#tabbar button .icn{color:inherit}
+#tabbar button.on{color:var(--label)}
+#tabbar button.on>span:last-child::before{
+  content:'';display:inline-block;width:5px;height:5px;margin-inline-end:3px;border-radius:50%;
+  background:currentColor;vertical-align:.08em;
+}
+#tabbar button.start .cir{box-shadow:none}
+#tabbar button.start span{color:var(--label)}
+#tabbar button.start.rec .cir{background:var(--label);color:var(--bg);box-shadow:none}
+#tabbar button.start.rec span{color:var(--label)}
+#tabbar button.start.rec .cir::after{border-color:var(--live)}
+#tabbar button.start.rec>span:last-child::before{display:none}
+
+/* Sets: ticked is a filled --label circle, still to do an outline in --label-3. */
+.setrow.done .n,.setrow-side.done>.n{
+  background:var(--label);color:var(--bg);box-shadow:none;opacity:1;
+}
+.setrow:not(.done) .n,.setrow-side:not(.done)>.n{
+  background:none;color:var(--label-2);box-shadow:inset 0 0 0 1px var(--label-3);
+}
+.setrow .n .failmark,.setrow-side>.n .failmark{background:var(--label-2);color:var(--bg)}
+/* The set in hand (the first one not ticked) wears the live red ring. Every open set gets it, then
+   the ones with an open set above them in an earlier row wrapper lose it (each .swrow sits in its
+   own plain div, so the order is only reachable through that wrapper). */
+.swrow .setrow:not(.done) .n{color:var(--label);box-shadow:inset 0 0 0 2px var(--live)}
+div:has(>.swrow .setrow:not(.done)) ~ div .swrow .setrow:not(.done) .n{
+  color:var(--label-2);box-shadow:inset 0 0 0 1px var(--label-3);
+}
+
+/* A running rest: the clock and its bar in red; paused or ready, they go quiet. */
+#timer.rest:not(.paused):not(.ready) .t{color:var(--live)}
+#timer.rest:not(.paused):not(.ready) .bar i{background:var(--live)}
+
+/* A record. White on the red so it clears 4.5:1 in both themes. */
+.pr{background:var(--live);color:#fff;border-radius:99px}
