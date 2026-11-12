@@ -67,6 +67,9 @@ public final class RestAlert {
     static final int COUNTDOWN_ID = 41;
     static final int NOTIFICATION_ID = 42;
     static final String COUNTDOWN_CHANNEL_ID = "rest-countdown";
+    // The Live Update card (a Nothing phone on Android 16): low importance, so the system does not
+    // light a Glyph zone to announce it; the Glyph Progress strip still follows its progress.
+    static final String LIVE_CHANNEL_ID = "rest-countdown-live";
     private static final int FLAGS = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
     private static final int RATE = RestTone.RATE;
     private static final long[] VIBRATE = new long[] {0, 200, 100, 200, 100, 400};
@@ -592,14 +595,14 @@ public final class RestAlert {
         int left = (int) Math.min(max, (Math.max(0, leftMs) + 999) / 1000);
         String clock = clock(left);
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-        ensureCountdownChannel(ctx, nm);
+        ensureLiveChannel(ctx, nm);
         Notification.ProgressStyle style = new Notification.ProgressStyle()
                 .setStyledByProgress(false)
                 .setProgressSegments(java.util.Collections.singletonList(
                         new Notification.ProgressStyle.Segment(max).setColor(accent)))
                 .setProgress(RestCountdownPlan.liveProgress(leftMs, totalMs, max));
         Icon icon = Icon.createWithResource(ctx, R.drawable.ic_stat_dumbbell);
-        Notification.Builder b = new Notification.Builder(ctx, COUNTDOWN_CHANNEL_ID)
+        Notification.Builder b = new Notification.Builder(ctx, LIVE_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_dumbbell)
                 .setContentTitle(clock)
                 .setShortCriticalText(clock)
@@ -662,6 +665,25 @@ public final class RestAlert {
     // The countdown is posted again every second; asking the system for the channel each time was
     // a binder call per tick. Once it is known to exist (the app never deletes it), it is not asked.
     private static volatile boolean countdownChannelReady = false;
+
+    private static volatile boolean liveChannelReady = false;
+
+    private static void ensureLiveChannel(Context ctx, NotificationManager nm) {
+        if (liveChannelReady) return;
+        if (nm.getNotificationChannel(LIVE_CHANNEL_ID) == null) {
+            NotificationChannel channel = new NotificationChannel(
+                    LIVE_CHANNEL_ID,
+                    ctx.getString(R.string.rest_countdown_channel_name),
+                    NotificationManager.IMPORTANCE_LOW);
+            channel.setDescription(ctx.getString(R.string.rest_channel_desc));
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            channel.setSound(null, null);
+            channel.enableVibration(false);
+            channel.enableLights(false);
+            nm.createNotificationChannel(channel);
+        }
+        liveChannelReady = true;
+    }
 
     private static void ensureCountdownChannel(Context ctx, NotificationManager nm) {
         if (Build.VERSION.SDK_INT < 26 || countdownChannelReady) return;
