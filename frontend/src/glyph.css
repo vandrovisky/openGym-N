@@ -137,6 +137,11 @@ body{
 .recap-v{font-family:var(--font-dot);font-size:26px;letter-spacing:0;white-space:normal;overflow:visible;overflow-wrap:anywhere;line-height:1}
 .bw-read{font-family:var(--font-dot);font-size:clamp(32px,14vw,52px);letter-spacing:0;white-space:nowrap}
 .bw-read .u{font-family:var(--font-mono);font-size:19px;font-weight:400;line-height:1}
+/* NumberField fit sizes the input in ch from the digits (1ch a digit, half a ch for the point), which
+   is right for tabular Space Grotesk and short for Doto: the last digit was cut off. Let the field size
+   to its content; a WebView without field-sizing gets slack at the end instead. */
+.bw-read .num{field-sizing:content;width:auto !important;min-width:1ch}
+@supports not (field-sizing:content){.bw-read .num{padding-inline-end:.7ch}}
 .stat-v{font-family:var(--font-dot);font-size:26px;letter-spacing:0}
 .tile .v:not(.v-sm){font-family:var(--font-dot);font-size:26px;letter-spacing:0}
 

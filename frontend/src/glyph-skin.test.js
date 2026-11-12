@@ -235,6 +235,11 @@ describe('glyph.css', () => {
       expect(block('.tile .v:not(.v-sm)')).toContain('font-family:var(--font-dot)')
       expect(block('.wr-num')).toContain('font-family:var(--font-dot)')
     })
+    it('the body weight read-out sizes to its content, since Doto is wider than the ch NumberField assumes', () => {
+      const b = block('.bw-read .num').replace(/\s+/g, '')
+      expect(b).toContain('field-sizing:content')
+      expect(b).toContain('width:auto!important')
+    })
     it('the running rest digits are --label; the dot bar carries the red', () => {
       expect(block('#timer.rest:not(.paused):not(.ready) .t').replace(/\s+/g, '')).toContain('color:var(--label)')
       expect(block('#timer.rest:not(.paused):not(.ready) .bar i.on').replace(/\s+/g, '')).toContain('background:var(--live)')
