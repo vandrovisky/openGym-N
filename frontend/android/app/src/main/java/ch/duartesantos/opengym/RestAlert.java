@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.drawable.Icon;
 import android.content.Intent;
 import android.widget.RemoteViews;
 import android.media.AudioAttributes;
@@ -570,6 +571,54 @@ public final class RestAlert {
         if (Build.VERSION.SDK_INT >= 31) {
             b.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE);
         }
+        return b.build();
+    }
+
+    /**
+     * The card as an Android 16 Live Update (API 36): the standard progress style, no custom
+     * views, asked to be promoted. Nothing OS 4 draws the Glyph Progress strip from it, also with
+     * the screen off. The progress drains from full to empty, and the clock is the title and
+     * the status-bar chip. Three actions fit: pause or resume, +15 s and skip.
+     */
+    private static android.os.Bundle promotedRequest() {
+        android.os.Bundle extras = new android.os.Bundle();
+        extras.putBoolean("android.requestPromotedOngoing", true);
+        return extras;
+    }
+
+    static Notification liveUpdateNotification(Context ctx, long leftMs, long totalMs, boolean paused,
+                                               String pause, String resume, String plus, String skip, int accent) {
+        int max = (int) Math.max(1, Math.round(totalMs / 1000.0));
+        int left = (int) Math.min(max, (Math.max(0, leftMs) + 999) / 1000);
+        String clock = clock(left);
+        NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+        ensureCountdownChannel(ctx, nm);
+        Notification.ProgressStyle style = new Notification.ProgressStyle()
+                .setStyledByProgress(false)
+                .setProgressSegments(java.util.Collections.singletonList(
+                        new Notification.ProgressStyle.Segment(max).setColor(accent)))
+                .setProgress(RestCountdownPlan.liveProgress(leftMs, totalMs, max));
+        Icon icon = Icon.createWithResource(ctx, R.drawable.ic_stat_dumbbell);
+        Notification.Builder b = new Notification.Builder(ctx, COUNTDOWN_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_stat_dumbbell)
+                .setContentTitle(clock)
+                .setShortCriticalText(clock)
+                .setStyle(style)
+                .setShowWhen(false)
+                .setOngoing(true)
+                .setCategory(Notification.CATEGORY_PROGRESS)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setColor(accent)
+                .setContentIntent(openApp(ctx))
+                .setLocalOnly(true)
+                .setOnlyAlertOnce(true)
+                .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+                // android.requestPromotedOngoing: the request for a Live Update (the setter is not
+                // in the API 36 stub, the extra is what it sets).
+                .addExtras(promotedRequest())
+                .addAction(new Notification.Action.Builder(icon, paused ? resume : pause, control(ctx, ACTION_PAUSE, 51)).build())
+                .addAction(new Notification.Action.Builder(icon, plus, control(ctx, ACTION_PLUS, 53)).build())
+                .addAction(new Notification.Action.Builder(icon, skip, control(ctx, ACTION_SKIP, 54)).build());
         return b.build();
     }
 

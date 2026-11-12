@@ -36,6 +36,32 @@ final class RestCountdownPlan {
     }
 
     /**
+     * Whether the countdown also goes to the Glyph LEDs: Nothing OS 4 (Android 16, API 36) draws
+     * the Glyph Progress strip from a Live Update notification's progress, so on a Nothing phone
+     * with API 36 the card is a Live Update (RestAlert.liveUpdateNotification). Elsewhere the
+     * custom card stays.
+     */
+    static boolean glyphProgress(int sdk, String manufacturer) {
+        return sdk >= 36 && manufacturer != null && manufacturer.trim().equalsIgnoreCase("nothing");
+    }
+
+    /**
+     * Same as the two-argument form, for a countdown that feeds the Glyph strip: the strip only
+     * moves when the notification is reposted, so the loop runs every second with the screen
+     * off as well.
+     */
+    static long nextTickMs(long leftMs, boolean interactive, boolean glyph) {
+        return nextTickMs(leftMs, interactive || glyph);
+    }
+
+    /** The progress a Live Update shows for `leftMs` of `totalMs`: full at the start, 0 at the end. */
+    static int liveProgress(long leftMs, long totalMs, int max) {
+        if (totalMs <= 0 || max <= 0) return 0;
+        long left = Math.min(Math.max(0, leftMs), totalMs);
+        return (int) Math.round((double) left / totalMs * max);
+    }
+
+    /**
      * Chronometer base (elapsed-realtime clock) for a countdown with `leftMs` to go. The
      * Chronometer shows whole seconds rounded down; +999 makes it round up like the in-app clock
      * (and RestAlert.clock), so 1:30 is shown for the whole first second of a 90 s rest and

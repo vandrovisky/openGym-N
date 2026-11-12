@@ -63,4 +63,32 @@ public class RestCountdownPlanTest {
         assertEquals("1:29", RestAlert.clock((int) RestCountdownPlan.chronometerShows(base, 1000)));
         assertEquals("0:00", RestAlert.clock((int) RestCountdownPlan.chronometerShows(base, 90_000)));
     }
+
+    @Test
+    public void glyphProgressIsOnlyForNothingPhonesOnApi36() {
+        assertTrue(RestCountdownPlan.glyphProgress(36, "Nothing"));
+        assertTrue(RestCountdownPlan.glyphProgress(37, " nothing "));
+        assertFalse(RestCountdownPlan.glyphProgress(35, "Nothing"));
+        assertFalse(RestCountdownPlan.glyphProgress(36, "samsung"));
+        assertFalse(RestCountdownPlan.glyphProgress(36, null));
+    }
+
+    @Test
+    public void glyphKeepsTheLoopRunningWithTheScreenOff() {
+        assertEquals(1000, RestCountdownPlan.nextTickMs(90_000, false, true));
+        assertEquals(500, RestCountdownPlan.nextTickMs(89_500, false, true));
+        assertEquals(90_000, RestCountdownPlan.nextTickMs(90_000, false, false));
+        assertEquals(1000, RestCountdownPlan.nextTickMs(90_000, true, false));
+        assertEquals(0, RestCountdownPlan.nextTickMs(0, false, true));
+    }
+
+    @Test
+    public void liveProgressDrainsFromFullToEmpty() {
+        assertEquals(90, RestCountdownPlan.liveProgress(90_000, 90_000, 90));
+        assertEquals(45, RestCountdownPlan.liveProgress(45_000, 90_000, 90));
+        assertEquals(0, RestCountdownPlan.liveProgress(0, 90_000, 90));
+        assertEquals(0, RestCountdownPlan.liveProgress(-5, 90_000, 90));
+        assertEquals(90, RestCountdownPlan.liveProgress(120_000, 90_000, 90));
+        assertEquals(0, RestCountdownPlan.liveProgress(10, 0, 90));
+    }
 }

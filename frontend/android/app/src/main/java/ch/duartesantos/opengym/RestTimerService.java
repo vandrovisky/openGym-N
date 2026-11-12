@@ -47,8 +47,8 @@ public class RestTimerService extends Service {
             // Screen off: nobody sees the card, and the Chronometer keeps the clock right anyway.
             // Turning the screen on runs this loop at once (screenOn), so the bar catches up.
             boolean interactive = interactive();
-            if (interactive) show();
-            handler.postDelayed(this, RestCountdownPlan.nextTickMs(left, interactive));
+            if (interactive || glyph()) show();
+            handler.postDelayed(this, RestCountdownPlan.nextTickMs(left, interactive, glyph()));
         }
     };
 
@@ -240,7 +240,7 @@ public class RestTimerService extends Service {
      */
     private void holdCpuUntilEnd() {
         long hold = RestCountdownPlan.cpuHoldMs(
-                RestAlert.exactAllowed(this), endsAt - System.currentTimeMillis());
+                RestAlert.exactAllowed(this) && !glyph(), endsAt - System.currentTimeMillis());
         if (hold <= 0) {
             releaseCpu();
             return;
@@ -287,6 +287,11 @@ public class RestTimerService extends Service {
         stopSelf();
     }
 
+    /** A Nothing phone on Android 16: the card is a Live Update and the Glyph strip follows it. */
+    private static boolean glyph() {
+        return RestCountdownPlan.glyphProgress(Build.VERSION.SDK_INT, Build.MANUFACTURER);
+    }
+
     private void emit(String type) {
         long left = paused ? pausedLeft : Math.max(0, endsAt - System.currentTimeMillis());
         RestAlertPlugin.emit(type, endsAt, totalMs, left, paused);
@@ -295,7 +300,9 @@ public class RestTimerService extends Service {
     private void show() {
         try {
             long left = paused ? pausedLeft : Math.max(0, endsAt - System.currentTimeMillis());
-            Notification n = RestAlert.countdownNotification(
+            Notification n = glyph()
+                    ? RestAlert.liveUpdateNotification(this, left, totalMs, paused, pauseLabel, resumeLabel, plusLabel, skipLabel, accent)
+                    : RestAlert.countdownNotification(
                     this, left, totalMs, paused, pauseLabel, resumeLabel, minusLabel, plusLabel, skipLabel, accent, ink);
             if (Build.VERSION.SDK_INT >= 34) {
                 startForeground(RestAlert.COUNTDOWN_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
